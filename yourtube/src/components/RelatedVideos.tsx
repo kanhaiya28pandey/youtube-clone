@@ -33,8 +33,10 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
             </h3>
             <p className="text-xs text-gray-600 mt-1">{video.videochanel}</p>
             <p className="text-xs text-gray-600">
-              {video.views.toLocaleString()} views •{" "}
-              {formatDistanceToNow(new Date(video.createdAt))} ago
+              {video?.views?.toLocaleString?.() || 0} views •{" "}
+              {video?.createdAt
+                ? `${formatDistanceToNow(new Date(video.createdAt))} ago`
+                : "Recently uploaded"}
             </p>
           </div>
         </Link>

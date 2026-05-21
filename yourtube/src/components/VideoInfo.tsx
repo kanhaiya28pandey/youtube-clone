@@ -135,9 +135,8 @@ const VideoInfo = ({ video }: any) => {
               onClick={handleLike}
             >
               <ThumbsUp
-                className={`w-5 h-5 mr-2 ${
-                  isLiked ? "fill-black text-black" : ""
-                }`}
+                className={`w-5 h-5 mr-2 ${isLiked ? "fill-black text-black" : ""
+                  }`}
               />
               {likes.toLocaleString()}
             </Button>
@@ -149,9 +148,8 @@ const VideoInfo = ({ video }: any) => {
               onClick={handleDislike}
             >
               <ThumbsDown
-                className={`w-5 h-5 mr-2 ${
-                  isDisliked ? "fill-black text-black" : ""
-                }`}
+                className={`w-5 h-5 mr-2 ${isDisliked ? "fill-black text-black" : ""
+                  }`}
               />
               {dislikes.toLocaleString()}
             </Button>
@@ -159,9 +157,8 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="sm"
-            className={`bg-gray-100 rounded-full ${
-              isWatchLater ? "text-primary" : ""
-            }`}
+            className={`bg-gray-100 rounded-full ${isWatchLater ? "text-primary" : ""
+              }`}
             onClick={handleWatchLater}
           >
             <Clock className="w-5 h-5 mr-2" />
@@ -194,8 +191,12 @@ const VideoInfo = ({ video }: any) => {
       </div>
       <div className="bg-gray-100 rounded-lg p-4">
         <div className="flex gap-4 text-sm font-medium mb-2">
-          <span>{video.views.toLocaleString()} views</span>
-          <span>{formatDistanceToNow(new Date(video.createdAt))} ago</span>
+          <span>{video?.views?.toLocaleString?.() || 0} views</span>
+          <span>
+            {video?.createdAt
+              ? `${formatDistanceToNow(new Date(video.createdAt))} ago`
+              : "Recently uploaded"}
+          </span>
         </div>
         <div className={`text-sm ${showFullDescription ? "" : "line-clamp-3"}`}>
           <p>
