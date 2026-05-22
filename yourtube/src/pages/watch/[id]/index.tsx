@@ -13,22 +13,41 @@ const index = () => {
   const [videos, setvideo] = useState<any>(null);
   const [video, setvide] = useState<any>(null);
   const [loading, setloading] = useState(true);
+  const [viewAdded, setviewAdded] = useState(false);
   useEffect(() => {
-    const fetchvideo = async () => {
-      if (!id || typeof id !== "string") return;
-      try {
-        const res = await axiosInstance.get("/video/getall");
-        const video = res.data?.filter((vid: any) => vid._id === id);
-        setvideo(video[0]);
-        setvide(res.data);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setloading(false);
-      }
-    };
-    fetchvideo();
-  }, [id]);
+  const fetchvideo = async () => {
+    if (!id || typeof id !== "string") return;
+
+    try {
+      const res = await axiosInstance.get("/video/getall");
+
+      const currentVideo = res.data?.find(
+        (vid: any) => vid._id === id
+      );
+
+      setvideo(currentVideo || null);
+
+      setvide(
+        res.data.filter((vid: any) => vid._id !== id)
+      );
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setloading(false);
+    }
+  };
+
+  fetchvideo();
+}, [id]);
+useEffect(() => {
+  if (!id || typeof id !== "string") return;
+
+  axiosInstance.patch(`/video/view/${id}`)
+    .catch((error) => {
+      console.log(error);
+    });
+
+}, []);
   // const relatedVideos = [
   //   {
   //     _id: "1",
@@ -62,7 +81,7 @@ const index = () => {
   if (loading) {
     return <div>Loading..</div>;
   }
-  
+
   if (!videos) {
     return <div>Video not found</div>;
   }

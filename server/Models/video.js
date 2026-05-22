@@ -8,6 +8,23 @@ const videoschema = mongoose.Schema(
     filesize: { type: String, required: true },
     videochanel: { type: String, required: true },
     uploader: { type: String, required: true },
+    Like: {
+      type: Number,
+      default: 0,
+    },
+
+    Dislike: {
+      type: Number,
+      default: 0,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+
+    lastViewed: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

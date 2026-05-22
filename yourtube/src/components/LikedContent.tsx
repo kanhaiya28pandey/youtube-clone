@@ -80,7 +80,7 @@ export default function LikedVideosContent() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-600">{likedVideos.length} videos</p>
+        <p className="text-sm text-gray-600">{likedVideos.filter((item) => item?.videoid).length} videos</p>
         <Button className="flex items-center gap-2">
           <Play className="w-4 h-4" />
           Play all
@@ -88,10 +88,12 @@ export default function LikedVideosContent() {
       </div>
 
       <div className="space-y-4">
-        {likedVideos.map((item) => (
+        {likedVideos.filter((item) => item?.videoid).map((item) => (
           <div key={item._id} className="flex gap-4 group">
-            <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
-              <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden">
+            <Link
+              href={`/watch/${item?.videoid?._id}`}
+              className="flex-shrink-0"
+            >              <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden">
                 <video
                   src={`${process.env.BACKEND_URL}/${item.videoid?.filepath}`}
                   className="object-cover group-hover:scale-105 transition-transform duration-200"
@@ -100,17 +102,21 @@ export default function LikedVideosContent() {
             </Link>
 
             <div className="flex-1 min-w-0">
-              <Link href={`/watch/${item.videoid._id}`}>
+              <Link href={`/watch/${item?.videoid?._id}`}>
                 <h3 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600 mb-1">
-                  {item.videoid.videotitle}
+                  {item?.videoid?.videotitle}
                 </h3>
               </Link>
               <p className="text-sm text-gray-600">
-                {item.videoid.videochanel}
+                {item?.videoid?.videochanel}
               </p>
               <p className="text-sm text-gray-600">
-                {item.videoid.views.toLocaleString()} views •{" "}
-                {formatDistanceToNow(new Date(item.videoid.createdAt))} ago
+                {item?.videoid?.views?.toLocaleString?.() || 0} views •{" "}
+                {item?.videoid?.createdAt
+                  ? `${formatDistanceToNow(
+                    new Date(item.videoid.createdAt)
+                  )} ago`
+                  : "Recently uploaded"}
               </p>
               <p className="text-xs text-gray-500 mt-1">
                 Liked {formatDistanceToNow(new Date(item.createdAt))} ago

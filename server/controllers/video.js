@@ -33,3 +33,22 @@ export const getallvideo = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+export const addview = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await video.findByIdAndUpdate(id, {
+      $inc: { views: 1 },
+    });
+
+    res.status(200).json({
+      message: "view added",
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "something went wrong",
+    });
+  }
+};
