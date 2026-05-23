@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import Comments from "@/components/Comments";
 import RelatedVideos from "@/components/RelatedVideos";
 import VideoInfo from "@/components/VideoInfo";
@@ -13,41 +14,52 @@ const index = () => {
   const [videos, setvideo] = useState<any>(null);
   const [video, setvide] = useState<any>(null);
   const [loading, setloading] = useState(true);
-  const [viewAdded, setviewAdded] = useState(false);
+  // const hasCountedView = useRef(false);
   useEffect(() => {
-  const fetchvideo = async () => {
+    const fetchvideo = async () => {
+      if (!id || typeof id !== "string") return;
+
+      try {
+        const res = await axiosInstance.get("/video/getall");
+
+        const currentVideo = res.data?.find(
+          (vid: any) => vid._id === id
+        );
+
+        setvideo(currentVideo || null);
+        setvide(res.data);
+        setvide(
+          res.data.filter((vid: any) => vid._id !== id)
+        );
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setloading(false);
+      }
+    };
+
+    fetchvideo();
+  }, [id]);
+
+  useEffect(() => {
     if (!id || typeof id !== "string") return;
 
-    try {
-      const res = await axiosInstance.get("/video/getall");
+    const viewed = sessionStorage.getItem(`viewed-${id}`);
 
-      const currentVideo = res.data?.find(
-        (vid: any) => vid._id === id
-      );
+    if (viewed) return;
 
-      setvideo(currentVideo || null);
+    const addView = async () => {
+      try {
+        await axiosInstance.patch(`/video/view/${id}`);
 
-      setvide(
-        res.data.filter((vid: any) => vid._id !== id)
-      );
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setloading(false);
-    }
-  };
+        sessionStorage.setItem(`viewed-${id}`, "true");
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
-  fetchvideo();
-}, [id]);
-useEffect(() => {
-  if (!id || typeof id !== "string") return;
-
-  axiosInstance.patch(`/video/view/${id}`)
-    .catch((error) => {
-      console.log(error);
-    });
-
-}, []);
+    addView();
+  }, [id]);
   // const relatedVideos = [
   //   {
   //     _id: "1",
@@ -88,8 +100,8 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2 space-y-4">
             <Videopplayer video={videos} />
             <VideoInfo video={videos} />
             <Comments videoId={id} />
