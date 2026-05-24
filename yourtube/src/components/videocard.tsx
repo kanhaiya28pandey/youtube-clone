@@ -3,7 +3,6 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 
-const videos = "/video/vdo.mp4";
 export default function VideoCard({ video }: any) {
   return (
     <Link href={`/watch/${video?._id}`} className="group">

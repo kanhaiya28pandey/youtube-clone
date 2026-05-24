@@ -52,3 +52,45 @@ export const editcomment = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+export const handleCommentReaction = async (req, res) => {
+  const { id } = req.params;
+  const { type } = req.body;
+
+  try {
+    const existingComment = await comment.findById(id);
+
+    if (!existingComment) {
+      return res.status(404).json({
+        message: "Comment not found",
+      });
+    }
+
+    if (type === "like") {
+      existingComment.likes += 1;
+    }
+
+    if (type === "dislike") {
+      existingComment.dislikes += 1;
+
+      // auto delete after 2 dislikes
+      if (existingComment.dislikes >= 2) {
+        await comment.findByIdAndDelete(id);
+
+        return res.status(200).json({
+          deleted: true,
+        });
+      }
+    }
+
+    await existingComment.save();
+
+    return res.status(200).json(existingComment);
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Something went wrong",
+    });
+  }
+};

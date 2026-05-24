@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 interface Comment {
   _id: string;
   videoid: string;
@@ -12,6 +13,8 @@ interface Comment {
   commentbody: string;
   usercommented: string;
   commentedon: string;
+  likes: number;
+  dislikes: number;
 }
 const Comments = ({ videoId }: any) => {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -68,15 +71,9 @@ const Comments = ({ videoId }: any) => {
         usercommented: user.name,
       });
       if (res.data.comment) {
-        const newCommentObj: Comment = {
-          _id: Date.now().toString(),
-          videoid: videoId,
-          userid: user._id,
-          commentbody: newComment,
-          usercommented: user.name || "Anonymous",
-          commentedon: new Date().toISOString(),
-        };
-        setComments([newCommentObj, ...comments]);
+        if (res.data.comment) {
+          await loadComments();
+        }
       }
       setNewComment("");
     } catch (error) {
@@ -111,7 +108,36 @@ const Comments = ({ videoId }: any) => {
       console.log(error);
     }
   };
+  const handleReaction = async (
+    commentId: string,
+    type: "like" | "dislike"
+  ) => {
+    try {
+      const res = await axiosInstance.patch(
+        `/comment/reaction/${commentId}`,
+        {
+          type,
+        }
+      );
 
+      // comment deleted automatically
+      if (res.data.deleted) {
+        setComments((prev) =>
+          prev.filter((c) => c._id !== commentId)
+        );
+
+        return;
+      }
+
+      setComments((prev) =>
+        prev.map((c) =>
+          c._id === commentId ? res.data : c
+        )
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const handleDelete = async (id: string) => {
     try {
       const res = await axiosInstance.delete(`/comment/deletecomment/${id}`);
@@ -126,7 +152,7 @@ const Comments = ({ videoId }: any) => {
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">{comments.length} Comments</h2>
 
-      {user && (
+      {user !== null && (
         <div className="flex gap-4">
           <Avatar className="w-10 h-10">
             <AvatarImage src={user.image || ""} />
@@ -206,6 +232,23 @@ const Comments = ({ videoId }: any) => {
                 ) : (
                   <>
                     <p className="text-sm">{comment.commentbody}</p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <button
+                        onClick={() => handleReaction(comment._id, "like")}
+                        className="flex items-center gap-1 text-sm text-gray-600 hover:text-black"
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                        {comment.likes}
+                      </button>
+
+                      <button
+                        onClick={() => handleReaction(comment._id, "dislike")}
+                        className="flex items-center gap-1 text-sm text-gray-600 hover:text-black"
+                      >
+                        <ThumbsDown className="w-4 h-4" />
+                        {comment.dislikes}
+                      </button>
+                    </div>
                     {comment.userid === user?._id && (
                       <div className="flex gap-2 mt-2 text-sm text-gray-500">
                         <button onClick={() => handleEdit(comment)}>
