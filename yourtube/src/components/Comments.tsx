@@ -15,6 +15,7 @@ interface Comment {
   commentedon: string;
   likes: number;
   dislikes: number;
+  city?: string;
 }
 const Comments = ({ videoId }: any) => {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -59,16 +60,49 @@ const Comments = ({ videoId }: any) => {
   if (loading) {
     return <div>Loading history...</div>;
   }
+  const getCityName = async () => {
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`
+            );
+
+            const data = await response.json();
+
+            resolve(
+              data.address.city ||
+              data.address.town ||
+              data.address.state ||
+              "Unknown"
+            );
+          } catch (error) {
+            console.log(error);
+            resolve("Unknown");
+          }
+        },
+        () => {
+          resolve("Unknown");
+        }
+      );
+    });
+  };
   const handleSubmitComment = async () => {
     if (!user || !newComment.trim()) return;
 
     setIsSubmitting(true);
+    const city = await getCityName();
     try {
       const res = await axiosInstance.post("/comment/postcomment", {
         videoid: videoId,
         userid: user._id,
         commentbody: newComment,
         usercommented: user.name,
+        city,
       });
       if (res.data.comment) {
         if (res.data.comment) {
@@ -198,7 +232,7 @@ const Comments = ({ videoId }: any) => {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-medium text-sm">
-                    {comment.usercommented}
+                    {comment.usercommented} • {comment.city || "Unknown"}
                   </span>
                   <span className="text-xs text-gray-600">
                     {formatDistanceToNow(new Date(comment.commentedon))} ago

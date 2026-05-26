@@ -13,6 +13,7 @@ const commentschema = mongoose.Schema(
     },
     commentbody: { type: String },
     usercommented: { type: String },
+    city: { type: String },
     commentedon: { type: Date, default: Date.now },
     likes: {
       type: Number,
