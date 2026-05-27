@@ -20,6 +20,7 @@ interface Comment {
 const Comments = ({ videoId }: any) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
@@ -67,7 +68,7 @@ const Comments = ({ videoId }: any) => {
           try {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
-            
+
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`
             );
@@ -96,27 +97,47 @@ const Comments = ({ videoId }: any) => {
 
     setIsSubmitting(true);
     const city = await getCityName();
+
     try {
-      const res = await axiosInstance.post("/comment/postcomment", {
-        videoid: videoId,
-        userid: user._id,
-        commentbody: newComment,
-        usercommented: user.name,
-        city,
-      });
-      if (res.data.comment) {
-        if (res.data.comment) {
-          await loadComments();
+      setErrorMessage("");
+
+      const response = await axiosInstance.post(
+        "/comment/postcomment",
+        {
+          videoid: videoId,
+          userid: user._id,
+          commentbody: newComment,
+          usercommented: user.name,
+          city,
+        },
+        {
+          validateStatus: () => true,
         }
+      );
+      if (response.status !== 200) {
+        setErrorMessage(
+          response.data?.message ||
+          "Failed to add comment"
+        );
+
+        setIsSubmitting(false);
+
+        return;
       }
+      await loadComments();
+
       setNewComment("");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding comment:", error);
+
+      setErrorMessage(
+        error.response?.data?.message ||
+        "Failed to add comment"
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
-
   const handleEdit = (comment: Comment) => {
     setEditingCommentId(comment._id);
     setEditText(comment.commentbody);
@@ -199,6 +220,11 @@ const Comments = ({ videoId }: any) => {
               onChange={(e: any) => setNewComment(e.target.value)}
               className="min-h-[80px] resize-none border-0 border-b-2 rounded-none focus-visible:ring-0"
             />
+            {errorMessage && (
+              <p className="text-sm text-red-500">
+                {errorMessage}
+              </p>
+            )}
             <div className="flex gap-2 justify-end">
               <Button
                 variant="ghost"

@@ -3,6 +3,27 @@ import mongoose from "mongoose";
 
 export const postcomment = async (req, res) => {
   const commentdata = req.body;
+  const text = commentdata.commentbody.trim();
+
+  const specialChars = text.match(/[^a-zA-Z0-9\s]/g) || [];
+
+  const specialCharPercentage =
+    specialChars.length / text.length;
+
+  if (specialCharPercentage > 0.4) {
+    return res.status(400).json({
+      message:
+        "Too many special characters are not allowed",
+    });
+  }
+  // block comments containing only special characters
+  const specialCharRegex = /^[^a-zA-Z0-9\s]+$/;
+
+  if (specialCharRegex.test(text)) {
+    return res.status(400).json({
+      message: "Special characters only comments are not allowed",
+    });
+  }
   const postcomment = new comment(commentdata);
   try {
     await postcomment.save();
