@@ -24,6 +24,11 @@ const Comments = ({ videoId }: any) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
+  const [translatedComments, setTranslatedComments] = useState<{
+    [key: string]: string;
+  }>({});
+  const [selectedLanguages, setSelectedLanguages] =
+    useState<{ [key: string]: string }>({});
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
   const fetchedComments = [
@@ -43,6 +48,26 @@ const Comments = ({ videoId }: any) => {
       usercommented: "Jane Smith",
       commentedon: new Date(Date.now() - 7200000).toISOString(),
     },
+  ];
+  const languages = [
+    { code: "en", label: "English" },
+    { code: "hi", label: "Hindi" },
+    { code: "fr", label: "French" },
+    { code: "ta", label: "Tamil" },
+    { code: "te", label: "Telugu" },
+    { code: "mr", label: "Marathi" },
+    { code: "kn", label: "Kannada" },
+    { code: "ml", label: "Malayalam" },
+    { code: "ko", label: "Korean" },
+    { code: "ja", label: "Japanese" },
+    { code: "zh-CN", label: "Chinese" },
+    { code: "ru", label: "Russian" },
+    { code: "bn", label: "Bengali" },
+    { code: "es", label: "Spanish" },
+    { code: "ur", label: "Urdu" },
+    { code: "ar", label: "Standard Arabic" },
+    { code: "pt", label: "Portuguese" },
+    { code: "de", label: "German" },
   ];
   useEffect(() => {
     loadComments();
@@ -193,6 +218,31 @@ const Comments = ({ videoId }: any) => {
       console.log(error);
     }
   };
+
+  const handleTranslate = async (
+    commentId: string,
+    text: string
+  ) => {
+    try {
+      const response = await fetch(
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${selectedLanguages[commentId] || "en"
+        }&dt=t&q=${encodeURIComponent(text)}`
+      );
+
+      const data = await response.json();
+
+      const translatedText = data[0]
+        .map((item: any) => item[0])
+        .join("");
+
+      setTranslatedComments((prev) => ({
+        ...prev,
+        [commentId]: translatedText,
+      }));
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const handleDelete = async (id: string) => {
     try {
       const res = await axiosInstance.delete(`/comment/deletecomment/${id}`);
@@ -292,9 +342,16 @@ const Comments = ({ videoId }: any) => {
                 ) : (
                   <>
                     <p className="text-sm">{comment.commentbody}</p>
+                    {translatedComments[comment._id] && (
+                      <p className="text-sm text-gray-600 mt-1 italic">
+                        {translatedComments[comment._id]}
+                      </p>
+                    )}
                     <div className="flex items-center gap-4 mt-2">
                       <button
-                        onClick={() => handleReaction(comment._id, "like")}
+                        onClick={() =>
+                          handleReaction(comment._id, "like")
+                        }
                         className="flex items-center gap-1 text-sm text-gray-600 hover:text-black"
                       >
                         <ThumbsUp className="w-4 h-4" />
@@ -302,11 +359,45 @@ const Comments = ({ videoId }: any) => {
                       </button>
 
                       <button
-                        onClick={() => handleReaction(comment._id, "dislike")}
+                        onClick={() =>
+                          handleReaction(comment._id, "dislike")
+                        }
                         className="flex items-center gap-1 text-sm text-gray-600 hover:text-black"
                       >
                         <ThumbsDown className="w-4 h-4" />
                         {comment.dislikes}
+                      </button>
+
+                      <select
+                        value={selectedLanguages[comment._id] || "en"}
+                        onChange={(e) =>
+                          setSelectedLanguages((prev) => ({
+                            ...prev,
+                            [comment._id]: e.target.value,
+                          }))
+                        }
+                        className="border rounded-md px-2 py-1 text-sm w-28 bg-white"
+                      >
+                        {languages.map((lang) => (
+                          <option
+                            key={lang.code}
+                            value={lang.code}
+                          >
+                            {lang.label}
+                          </option>
+                        ))}
+                      </select>
+
+                      <button
+                        onClick={() =>
+                          handleTranslate(
+                            comment._id,
+                            comment.commentbody
+                          )
+                        }
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        Translate
                       </button>
                     </div>
                     {comment.userid === user?._id && (

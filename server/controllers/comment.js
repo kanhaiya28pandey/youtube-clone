@@ -5,8 +5,7 @@ export const postcomment = async (req, res) => {
   const commentdata = req.body;
   const text = commentdata.commentbody.trim();
 
-  const specialChars = text.match(/[^a-zA-Z0-9\s]/g) || [];
-
+  const specialChars =  text.match(/[^\p{L}\p{N}\s]/gu) || [];
   const specialCharPercentage =
     specialChars.length / text.length;
 
@@ -17,13 +16,7 @@ export const postcomment = async (req, res) => {
     });
   }
   // block comments containing only special characters
-  const specialCharRegex = /^[^a-zA-Z0-9\s]+$/;
-
-  if (specialCharRegex.test(text)) {
-    return res.status(400).json({
-      message: "Special characters only comments are not allowed",
-    });
-  }
+  
   const postcomment = new comment(commentdata);
   try {
     await postcomment.save();
