@@ -88,6 +88,40 @@ const VideoInfo = ({ video }: any) => {
       console.log(error);
     }
   };
+  const handleDownload = async () => {
+    if (!user) {
+      alert("Please login first");
+      return;
+    }
+
+    try {
+      const res = await axiosInstance.post("/download", {
+        userid: user._id,
+        videoid: video._id,
+      });
+
+      if (res.data.success) {
+        const link = document.createElement("a");
+
+        link.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/${video.filepath}`;
+
+        link.download = video.videotitle;
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        document.body.removeChild(link);
+      }
+    } catch (error: any) {
+      alert(
+        error?.response?.data?.message ||
+        "Download failed"
+      );
+
+      console.log(error);
+    }
+  };
   const handleDislike = async () => {
     if (!user) return;
     try {
@@ -176,6 +210,7 @@ const VideoInfo = ({ video }: any) => {
             variant="ghost"
             size="sm"
             className="bg-gray-100 rounded-full"
+            onClick={handleDownload}
           >
             <Download className="w-5 h-5 mr-2" />
             Download
@@ -187,6 +222,7 @@ const VideoInfo = ({ video }: any) => {
           >
             <MoreHorizontal className="w-5 h-5" />
           </Button>
+
         </div>
       </div>
       <div className="bg-gray-100 rounded-lg p-4">

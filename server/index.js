@@ -9,8 +9,10 @@
   import watchlaterroutes from "./routes/watchlater.js";
   import historyrroutes from "./routes/history.js";
   import commentroutes from "./routes/comment.js";
+  import downloadRoutes from "./routes/download.js";
   dotenv.config();
   // require("dotenv").config();
+  
   const app = express();
   import path from "path";
   app.use(cors());
@@ -27,9 +29,10 @@
   app.use("/watch", watchlaterroutes);
   app.use("/history", historyrroutes);
   app.use("/comment", commentroutes);
-  const PORT = process.env.PORT || 5000;
+  
+const PORT = process.env.PORT || 5000;
 const DBURL = process.env.DB_URL;
-
+app.use("/download", downloadRoutes);
 mongoose
   .connect(DBURL)
   .then(() => {
