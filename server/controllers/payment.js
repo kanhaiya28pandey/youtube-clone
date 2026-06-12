@@ -1,3 +1,5 @@
+import { sendInvoiceMail }
+  from "../filehelper/sendInvoiceMail.js";
 import Razorpay from "razorpay";
 import Auth from "../Models/Auth.js";
 import dotenv from "dotenv";
@@ -10,8 +12,37 @@ const razorpay = new Razorpay({
 
 export const createOrder = async (req, res) => {
   try {
+    const {
+      userId,
+      paymentId,
+      orderId,
+      signature,
+      plan,
+    } = req.body;
+
+    let amount = 0;
+
+    switch (plan) {
+      case "bronze":
+        amount = 1000; // ₹10
+        break;
+
+      case "silver":
+        amount = 5000; // ₹50
+        break;
+
+      case "gold":
+        amount = 10000; // ₹100
+        break;
+
+      default:
+        return res.status(400).json({
+          message: "Invalid plan",
+        });
+    }
+
     const options = {
-      amount: 9900,
+      amount,
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     };
@@ -29,12 +60,32 @@ export const createOrder = async (req, res) => {
 
 export const upgradePremium = async (req, res) => {
   try {
-    const { userId, paymentId, orderId, signature } = req.body;
+    const {
+      userId,
+      paymentId,
+      orderId,
+      signature,
+      plan,
+    } = req.body;
+
+    console.log("BODY:", req.body);
 
     const generatedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .createHmac(
+        "sha256",
+        process.env.RAZORPAY_KEY_SECRET
+      )
       .update(orderId + "|" + paymentId)
       .digest("hex");
+
+    console.log(
+      "Generated:",
+      generatedSignature
+    );
+    console.log(
+      "Received :",
+      signature
+    );
 
     if (generatedSignature !== signature) {
       return res.status(400).json({
@@ -42,18 +93,68 @@ export const upgradePremium = async (req, res) => {
       });
     }
 
-    await Auth.findByIdAndUpdate(userId, {
-      isPremium: true,
-    });
+    console.log("Signature verified");
 
-    res.status(200).json({
-      message: "Premium activated",
+    let watchTimeLimit = 5;
+
+    if (plan === "bronze") {
+      watchTimeLimit = 7;
+    } else if (plan === "silver") {
+      watchTimeLimit = 10;
+    } else if (plan === "gold") {
+      watchTimeLimit = -1; // unlimited
+    }
+
+    const updatedUser =
+      await Auth.findByIdAndUpdate(
+        userId,
+        {
+          isPremium: true,
+          plan,
+          watchTimeLimit,
+        },
+        { new: true }
+      );
+    let amount = 0;
+
+    switch (plan) {
+      case "bronze":
+        amount = 10;
+        break;
+
+      case "silver":
+        amount = 50;
+        break;
+
+      case "gold":
+        amount = 100;
+        break;
+    }
+
+    await sendInvoiceMail(
+      updatedUser.email,
+      updatedUser.name,
+      plan.toUpperCase(),
+      amount,
+      paymentId
+    );
+
+    console.log(
+      "Updated User:",
+      updatedUser
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Plan upgraded successfully",
+      user: updatedUser,
     });
   } catch (error) {
+    console.log("UPGRADE ERROR:");
     console.log(error);
 
-    res.status(500).json({
-      message: "Failed to upgrade",
+    return res.status(500).json({
+      message: error.message,
     });
   }
 };
