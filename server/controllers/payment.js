@@ -95,23 +95,24 @@ export const upgradePremium = async (req, res) => {
 
     console.log("Signature verified");
 
-    let watchTimeLimit = 5;
-
-    if (plan === "bronze") {
-      watchTimeLimit = 7;
-    } else if (plan === "silver") {
-      watchTimeLimit = 10;
-    } else if (plan === "gold") {
-      watchTimeLimit = -1; // unlimited
-    }
-
+    // let watchTimeLimit = 5;
     const updatedUser =
       await Auth.findByIdAndUpdate(
         userId,
         {
-          isPremium: true,
+          isPremium: plan !== "free",
           plan,
-          watchTimeLimit,
+
+          watchTimeLimit:
+            plan === "bronze"
+              ? 7
+              : plan === "silver"
+                ? 10
+                : plan === "gold"
+                  ? 999999
+                  : 5,
+
+          watchTimeUsed: 0,
         },
         { new: true }
       );

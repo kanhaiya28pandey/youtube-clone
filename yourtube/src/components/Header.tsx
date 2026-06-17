@@ -1,5 +1,5 @@
 import { Bell, Menu, Mic, Search, User, VideoIcon } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import { Input } from "./ui/input";
@@ -17,6 +17,13 @@ import { useUser } from "@/lib/AuthContext";
 
 const Header = () => {
   const { user, logout, handlegooglesignin } = useUser();
+  console.log("USER:", user);
+  console.log(
+    "limit:",
+    user?.watchTimeLimit,
+    "used:",
+    user?.watchTimeUsed
+  );
   // const user: any = {
   //   id: "1",
   //   name: "John Doe",
@@ -24,8 +31,55 @@ const Header = () => {
   //   image: "https://github.com/shadcn.png?height=32&width=32",
   // };
   const [searchQuery, setSearchQuery] = useState("");
+  useEffect(() => {
+    if (!user) return;
+
+    setRemainingMinutes(
+      Math.max(
+        0,
+        (user.watchTimeLimit || 0) -
+        (user.watchTimeUsed || 0)
+      )
+    );
+  }, [user]);
+  const [remainingMinutes, setRemainingMinutes] =
+    useState(
+      user
+        ? Math.max(
+          0,
+          (user.watchTimeLimit || 0) -
+          (user.watchTimeUsed || 0)
+        )
+        : 0
+    );
   const [isdialogeopen, setisdialogeopen] = useState(false);
   const router = useRouter();
+  useEffect(() => {
+    const handleWatchTimeUpdate = (
+      event: any
+    ) => {
+      console.log(
+        "Header received:",
+        event.detail.remaining
+      );
+
+      setRemainingMinutes(
+        Math.max(0, event.detail.remaining)
+      );
+    };
+
+    window.addEventListener(
+      "watchtimeUpdated",
+      handleWatchTimeUpdate
+    );
+
+    return () => {
+      window.removeEventListener(
+        "watchtimeUpdated",
+        handleWatchTimeUpdate
+      );
+    };
+  }, []);
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -80,11 +134,47 @@ const Header = () => {
       <div className="flex items-center gap-3">
         {user ? (
           <>
-            {user?.isPremium && (
-              <div className="hidden md:flex items-center bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-semibold">
-                👑 Premium
+            <div className="hidden md:flex items-center gap-2">
+
+              {user?.plan !== "gold" && (
+                <div
+                  className="
+        bg-blue-100
+        text-blue-700
+        px-3
+        py-1
+        rounded-full
+        text-sm
+        font-semibold
+      "
+                >
+                  ⏳ {remainingMinutes.toFixed(1)}m left
+                </div>
+              )}
+
+              <div
+                className={`
+      px-3 py-1 rounded-full text-sm font-semibold
+      ${user?.plan === "gold"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : user?.plan === "silver"
+                      ? "bg-gray-100 text-gray-700"
+                      : user?.plan === "bronze"
+                        ? "bg-orange-100 text-orange-700"
+                        : "bg-zinc-100 text-zinc-600"
+                  }
+    `}
+              >
+                {user?.plan === "gold"
+                  ? "🥇 Gold"
+                  : user?.plan === "silver"
+                    ? "🥈 Silver"
+                    : user?.plan === "bronze"
+                      ? "🥉 Bronze"
+                      : "🆓 Free"}
               </div>
-            )}
+
+            </div>
             <Button variant="ghost" size="icon">
               <VideoIcon className="w-6 h-6" />
             </Button>

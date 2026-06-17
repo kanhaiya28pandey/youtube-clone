@@ -1,7 +1,9 @@
 "use client";
 
+
 import { useEffect, useRef, useState } from "react";
 import { useUser } from "@/lib/AuthContext";
+import axiosInstance from "@/lib/axiosinstance";
 
 interface VideoPlayerProps {
   video: {
@@ -20,62 +22,110 @@ export default function VideoPlayer({
 
   const [showLimitPopup, setShowLimitPopup] =
     useState(false);
+  const [remainingTime, setRemainingTime] =
+    useState<number | null>(null);
 
   useEffect(() => {
-    const videoElement = videoRef.current;
+    if (!user) return;
 
-    if (!videoElement) return;
+    if (user.plan === "gold") {
+      setRemainingTime(null);
+      return;
+    }
 
-    const handleTimeUpdate = () => {
-      let limit = Infinity;
+    const remaining =
+      (user.watchTimeLimit -
+        (user.watchTimeUsed || 0)) * 60;
 
-      switch (user?.plan) {
-        case "bronze":
-          limit = 7 * 60;
-          break;
+    setRemainingTime(remaining);
 
-        case "silver":
-          limit = 10 * 60;
-          break;
+    const interval = setInterval(async () => {
+      const video = videoRef.current;
 
-        case "gold":
-          limit = Infinity;
-          break;
-
-        default:
-          limit = 5 * 60;
+      // Don't count if video isn't actively playing
+      if (!video || video.paused || video.ended) {
+        return;
       }
 
-      if (videoElement.currentTime >= limit) {
-        videoElement.pause();
+      try {
+        console.log("Sending watchtime update");
 
-        setShowLimitPopup(true);
+        const res = await axiosInstance.post(
+          "/watchtime/update",
+          {
+            userId: user._id,
+            seconds: 30,
+          }
+        );
+
+        console.log(
+          "Dispatching event:",
+          res.data.remaining
+        );
+
+        window.dispatchEvent(
+          new CustomEvent("watchtimeUpdated", {
+            detail: {
+              remaining: res.data.remaining,
+              used: res.data.used,
+            },
+          })
+        );
+
+        console.log("Response:", res.data);
+
+        if (res.data.limitReached) {
+          video.pause();
+
+          setRemainingTime(0);
+
+          setShowLimitPopup(true);
+
+          clearInterval(interval);
+
+          return;
+        }
+
+        setRemainingTime(
+          Math.max(0, res.data.remaining * 60)
+        );
+      } catch (error) {
+        console.log(error);
       }
-    };
+    }, 30000);
 
-    videoElement.addEventListener(
-      "timeupdate",
-      handleTimeUpdate
-    );
-
-    return () => {
-      videoElement.removeEventListener(
-        "timeupdate",
-        handleTimeUpdate
-      );
-    };
+    return () => clearInterval(interval);
   }, [user]);
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
 
+    const secs = Math.floor(seconds % 60);
+
+    return `${mins}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  };
   return (
     <>
-      <div className="aspect-video bg-black rounded-lg overflow-hidden">
+      <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
         {video?.filepath ? (
           <video
             ref={videoRef}
             controls
-            autoPlay
+            autoPlay={remainingTime !== 0}
             className="w-full h-full"
             src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${video.filepath}`}
+            onPlay={(e) => {
+              if (
+                user &&
+                user.plan !== "gold" &&
+                user.watchTimeUsed >= user.watchTimeLimit
+              ) {
+                e.currentTarget.pause();
+
+                setShowLimitPopup(true);
+              }
+            }}
           />
         ) : (
           <div>No video available</div>
@@ -91,8 +141,10 @@ export default function VideoPlayer({
             </h2>
 
             <p className="text-gray-600 mb-5">
-              Upgrade your plan to continue
-              watching this video.
+              Your watch limit for the
+              ${user?.plan || "free"} plan has been reached.
+
+              Upgrade now for more watch time.
             </p>
 
             <a href="/premium">

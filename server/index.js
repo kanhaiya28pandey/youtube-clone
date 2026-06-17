@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
-console.log("EMAIL_USER =", process.env.EMAIL_USER);
-console.log("EMAIL_PASS =", process.env.EMAIL_PASS);
+// console.log("EMAIL_USER =", process.env.EMAIL_USER);
+// console.log("EMAIL_PASS =", process.env.EMAIL_PASS);
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -14,6 +14,7 @@ import historyrroutes from "./routes/history.js";
 import commentroutes from "./routes/comment.js";
 import downloadRoutes from "./routes/download.js";
 import paymentRoutes from "./routes/payment.js";
+import watchtimeRoutes from "./routes/watchtime.js";
 // require("dotenv").config();
 
 const app = express();
@@ -34,6 +35,7 @@ app.use("/history", historyrroutes);
 app.use("/comment", commentroutes);
 
 app.use("/payment", paymentRoutes);
+app.use("/watchtime", watchtimeRoutes);
 
 const PORT = process.env.PORT || 5000;
 const DBURL = process.env.DB_URL;
