@@ -7,12 +7,10 @@ const userschema = mongoose.Schema({
   description: { type: String },
   image: { type: String },
 
-
   isPremium: {
     type: Boolean,
     default: false,
   },
-
 
   plan: {
     type: String,
@@ -20,14 +18,19 @@ const userschema = mongoose.Schema({
     default: "free",
   },
 
-  joinedon: {
-    type: Date,
-    default: Date.now,
-  },
-
   watchTimeLimit: {
     type: Number,
     default: 5,
+  },
+
+  watchTimeUsed: {
+    type: Number,
+    default: 0,
+  },
+
+  joinedon: {
+    type: Date,
+    default: Date.now,
   },
 });
 

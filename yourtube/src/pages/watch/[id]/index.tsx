@@ -34,6 +34,7 @@ const index = () => {
       } finally {
         setloading(false);
       }
+      
     };
 
     fetchvideo();
@@ -88,6 +89,7 @@ const index = () => {
   //     createdAt: new Date(Date.now() - 86400000).toISOString(),
   //   },
   // ];
+  
   if (loading) {
     return <div>Loading..</div>;
   }

@@ -6,8 +6,8 @@ import { useUser } from "@/lib/AuthContext";
 import { useState } from "react";
 
 export default function PremiumPage() {
-
   const { user } = useUser();
+  const currentPlan = user?.plan || "free";
   const [selectedPlan, setSelectedPlan] =
     useState("bronze");
 
@@ -63,7 +63,9 @@ export default function PremiumPage() {
 
             alert("Premium Activated Successfully!");
 
-            window.location.reload();
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
           } catch (error) {
             console.log("Upgrade Error:", error);
 
@@ -141,9 +143,10 @@ export default function PremiumPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
               {/* Bronze */}
-              <div
-                onClick={() => setSelectedPlan("bronze")}
-                className={`
+              {currentPlan === "free" && (
+                <div
+                  onClick={() => setSelectedPlan("bronze")}
+                  className={`
         cursor-pointer
         rounded-2xl
         border
@@ -151,28 +154,30 @@ export default function PremiumPage() {
         transition-all
         hover:shadow-md
         ${selectedPlan === "bronze"
-                    ? "border-amber-500 bg-amber-50"
-                    : "border-gray-200"
-                  }
+                      ? "border-amber-500 bg-amber-50"
+                      : "border-gray-200"
+                    }
       `}
-              >
-                <h3 className="text-lg font-bold">
-                  Bronze
-                </h3>
+                >
+                  <h3 className="text-lg font-bold">
+                    Bronze
+                  </h3>
 
-                <p className="text-3xl font-bold mt-2">
-                  ₹10
-                </p>
+                  <p className="text-3xl font-bold mt-2">
+                    ₹10
+                  </p>
 
-                <p className="text-sm text-gray-500 mt-1">
-                  7 Minutes Watch Time
-                </p>
-              </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    7 Minutes Watch Time
+                  </p>
+                </div>
+              )}
 
               {/* Silver */}
-              <div
-                onClick={() => setSelectedPlan("silver")}
-                className={`
+              {["free", "bronze"].includes(currentPlan) && (
+                <div
+                  onClick={() => setSelectedPlan("silver")}
+                  className={`
         cursor-pointer
         rounded-2xl
         border
@@ -180,28 +185,30 @@ export default function PremiumPage() {
         transition-all
         hover:shadow-md
         ${selectedPlan === "silver"
-                    ? "border-gray-500 bg-gray-50"
-                    : "border-gray-200"
-                  }
+                      ? "border-gray-500 bg-gray-50"
+                      : "border-gray-200"
+                    }
       `}
-              >
-                <h3 className="text-lg font-bold">
-                  Silver
-                </h3>
+                >
+                  <h3 className="text-lg font-bold">
+                    Silver
+                  </h3>
 
-                <p className="text-3xl font-bold mt-2">
-                  ₹50
-                </p>
+                  <p className="text-3xl font-bold mt-2">
+                    ₹50
+                  </p>
 
-                <p className="text-sm text-gray-500 mt-1">
-                  10 Minutes Watch Time
-                </p>
-              </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    10 Minutes Watch Time
+                  </p>
+                </div>
+              )}
 
               {/* Gold */}
-              <div
-                onClick={() => setSelectedPlan("gold")}
-                className={`
+              {["free", "bronze", "silver"].includes(currentPlan) && (
+                <div
+                  onClick={() => setSelectedPlan("gold")}
+                  className={`
         relative
         cursor-pointer
         rounded-2xl
@@ -210,27 +217,28 @@ export default function PremiumPage() {
         transition-all
         hover:shadow-md
         ${selectedPlan === "gold"
-                    ? "border-yellow-500 bg-yellow-50"
-                    : "border-gray-200"
-                  }
+                      ? "border-yellow-500 bg-yellow-50"
+                      : "border-gray-200"
+                    }
       `}
-              >
-                <span className="absolute top-1 right-1 text-xs bg-yellow-500 text-white px-2 py-1 rounded-full">
-                  Popular
-                </span>
+                >
+                  <span className="absolute top-1 right-1 text-xs bg-yellow-500 text-white px-2 py-1 rounded-full">
+                    Popular
+                  </span>
 
-                <h3 className="text-lg font-bold">
-                  Gold
-                </h3>
+                  <h3 className="text-lg font-bold">
+                    Gold
+                  </h3>
 
-                <p className="text-3xl font-bold mt-2">
-                  ₹100
-                </p>
+                  <p className="text-3xl font-bold mt-2">
+                    ₹100
+                  </p>
 
-                <p className="text-sm text-gray-500 mt-1">
-                  Unlimited Watch Time
-                </p>
-              </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Unlimited Watch Time
+                  </p>
+                </div>
+              )}
 
             </div>
           </div>
@@ -254,26 +262,29 @@ export default function PremiumPage() {
           </div>
 
           {/* Premium Status */}
-          {user?.plan !== "free" ? (
+
+          {currentPlan === "gold" ? (
             <div className="mt-6 bg-green-100 text-green-700 text-center p-3 rounded-xl font-semibold">
-              ✅ You are already a Premium Member
+              👑 Professional Member
+              <br />
+              Unlimited Watch Time Active
             </div>
           ) : (
             <Button
               onClick={handlePayment}
               className="
-                w-full
-                mt-6
-                bg-blue-600
-                hover:bg-blue-700
-                text-white
-                rounded-full
-                py-6
-                text-lg
-                font-semibold
-              "
+      w-full
+      mt-6
+      bg-blue-600
+      hover:bg-blue-700
+      text-white
+      rounded-full
+      py-6
+      text-lg
+      font-semibold
+    "
             >
-              Upgrade Now
+              Upgrade to {selectedPlan}
             </Button>
           )}
         </div>
