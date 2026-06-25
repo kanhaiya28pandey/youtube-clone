@@ -134,13 +134,13 @@ export default function VideoPlayer({
 
       {showLimitPopup && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl max-w-md w-full text-center">
+          <div className="bg-card text-foreground p-6 rounded-2xl border border-border">
 
             <h2 className="text-2xl font-bold mb-2">
               Watch Limit Reached
             </h2>
 
-            <p className="text-gray-600 mb-5">
+            <p className="text-muted-foreground">
               Your watch limit for the
               ${user?.plan || "free"} plan has been reached.
 

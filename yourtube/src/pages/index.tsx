@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 export default function Home() {
   return (
-    <main className=" p-6">
+    <main className="flex-1 p-6 bg-background text-foreground">
       <CategoryTabs />
       <Suspense fallback={<div>Loading videos...</div>}>
         <Videogrid />

@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-// console.log("EMAIL_USER =", process.env.EMAIL_USER);
-// console.log("EMAIL_PASS =", process.env.EMAIL_PASS);
+import otpRoutes from "./routes/otp.js";
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -28,6 +27,7 @@ app.get("/", (req, res) => {
 });
 app.use(bodyParser.json());
 app.use("/user", userroutes);
+app.use("/otp", otpRoutes);
 app.use("/video", videoroutes);
 app.use("/like", likeroutes);
 app.use("/watch", watchlaterroutes);

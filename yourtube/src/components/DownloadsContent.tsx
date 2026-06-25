@@ -69,7 +69,7 @@ const DownloadsContent = () => {
         <Link
           href={`/watch/${item.videoid?._id}`}
         >
-          <div className="flex gap-4 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+          <div className="flex gap-4 p-3 border rounded-lg hover:bg-card cursor-pointer">
 
             <video
               src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.videoid?.filepath}`}
@@ -81,11 +81,11 @@ const DownloadsContent = () => {
                 {item.videoid?.videotitle}
               </h3>
 
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {item.videoid?.videochanel}
               </p>
 
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Downloaded on{" "}
                 {new Date(
                   item.downloadedAt
@@ -105,7 +105,7 @@ const DownloadsContent = () => {
                 : item._id
             )
           }
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100"
+          className="absolute top-4 right-4 p-2 rounded-full hover:bg-card"
         >
           <MoreVertical className="w-5 h-5" />
         </button>
@@ -117,7 +117,7 @@ const DownloadsContent = () => {
               absolute
               right-4
               top-14
-              bg-white
+              bg-card text-foreground
               border
               rounded-xl
               shadow-lg
@@ -138,7 +138,7 @@ const DownloadsContent = () => {
                 w-full
                 px-4
                 py-3
-                hover:bg-gray-100
+                hover:bg-card
               "
             >
               <Trash2 className="w-5 h-5" />

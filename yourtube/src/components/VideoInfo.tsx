@@ -145,7 +145,7 @@ const VideoInfo = ({ video }: any) => {
       console.log(error);
     }
   };
-  
+
   const handleDislike = async () => {
     if (!user) return;
     try {
@@ -180,33 +180,38 @@ const VideoInfo = ({ video }: any) => {
           </Avatar>
           <div>
             <h3 className="font-medium">{video.videochanel}</h3>
-            <p className="text-sm text-gray-600">1.2M subscribers</p>
+            <p className="text-sm text-muted-foreground">1.2M subscribers</p>
           </div>
-          <Button className="ml-4">Subscribe</Button>
+          <Button
+            variant="default"
+            className="ml-4"
+          >
+            Subscribe
+          </Button>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-gray-100 rounded-full">
+          <div className="flex items-center bg-card rounded-full">
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-l-full"
+              className="bg-muted text-foreground rounded-full hover:bg-accent"
               onClick={handleLike}
             >
               <ThumbsUp
-                className={`w-5 h-5 mr-2 ${isLiked ? "fill-black text-black" : ""
+                className={`w-5 h-5 mr-2 ${isLiked ? "fill-current text-primary" : ""
                   }`}
               />
               {likes.toLocaleString()}
             </Button>
-            <div className="w-px h-6 bg-gray-300" />
+            <div className="w-px h-6 bg-border" />
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-r-full"
+              className="bg-muted text-foreground rounded-full hover:bg-accent"
               onClick={handleDislike}
             >
               <ThumbsDown
-                className={`w-5 h-5 mr-2 ${isDisliked ? "fill-black text-black" : ""
+                className={`w-5 h-5 mr-2 ${isDisliked ? "fill-current text-primary" : ""
                   }`}
               />
               {dislikes.toLocaleString()}
@@ -215,7 +220,7 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="sm"
-            className={`bg-gray-100 rounded-full ${isWatchLater ? "text-primary" : ""
+            className={`bg-muted text-foreground rounded-full hover:bg-accent ${isWatchLater ? "text-primary" : ""
               }`}
             onClick={handleWatchLater}
           >
@@ -225,7 +230,7 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="sm"
-            className="bg-gray-100 rounded-full"
+            className="bg-muted text-foreground rounded-full hover:bg-accent"
           >
             <Share className="w-5 h-5 mr-2" />
             Share
@@ -235,7 +240,7 @@ const VideoInfo = ({ video }: any) => {
             size="sm"
             disabled={isDownloaded}
             onClick={handleDownload}
-            className="bg-gray-100 rounded-full"
+            className="bg-muted text-foreground rounded-full hover:bg-accent"
           >
             {isDownloaded ? (
               <Check className="w-5 h-5 mr-2" />
@@ -250,14 +255,14 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="icon"
-            className="bg-gray-100 rounded-full"
+            className="bg-muted text-foreground rounded-full hover:bg-accent"
           >
             <MoreHorizontal className="w-5 h-5" />
           </Button>
 
         </div>
       </div>
-      <div className="bg-gray-100 rounded-lg p-4">
+      <div className="bg-card rounded-lg p-4 border border-border">
         <div className="flex gap-4 text-sm font-medium mb-2">
           <span>{video?.views?.toLocaleString?.() || 0} views</span>
           <span>
@@ -275,7 +280,7 @@ const VideoInfo = ({ video }: any) => {
         <Button
           variant="ghost"
           size="sm"
-          className="mt-2 p-0 h-auto font-medium"
+          className="bg-muted text-foreground rounded-full hover:bg-accent"
           onClick={() => setShowFullDescription(!showFullDescription)}
         >
           {showFullDescription ? "Show less" : "Show more"}

@@ -277,13 +277,16 @@ const Comments = ({ videoId }: any) => {
             )}
             <div className="flex gap-2 justify-end">
               <Button
-                variant="ghost"
+                variant="secondary"
+                className="bg-muted text-foreground hover:bg-accent"
                 onClick={() => setNewComment("")}
                 disabled={!newComment.trim()}
               >
                 Cancel
               </Button>
               <Button
+                variant="secondary"
+                className="bg-foreground text-background hover:opacity-90"
                 onClick={handleSubmitComment}
                 disabled={!newComment.trim() || isSubmitting}
               >
@@ -295,7 +298,7 @@ const Comments = ({ videoId }: any) => {
       )}
       <div className="space-y-4">
         {comments.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">
+          <p className="text-sm text-muted-foreground italic">
             No comments yet. Be the first to comment!
           </p>
         ) : (
@@ -310,7 +313,7 @@ const Comments = ({ videoId }: any) => {
                   <span className="font-medium text-sm">
                     {comment.usercommented} • {comment.city || "Unknown"}
                   </span>
-                  <span className="text-xs text-gray-600">
+                  <span className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(comment.commentedon))} ago
                   </span>
                 </div>
@@ -343,7 +346,7 @@ const Comments = ({ videoId }: any) => {
                   <>
                     <p className="text-sm">{comment.commentbody}</p>
                     {translatedComments[comment._id] && (
-                      <p className="text-sm text-gray-600 mt-1 italic">
+                      <p className="text-sm text-muted-foreground mt-1 italic">
                         {translatedComments[comment._id]}
                       </p>
                     )}
@@ -352,7 +355,7 @@ const Comments = ({ videoId }: any) => {
                         onClick={() =>
                           handleReaction(comment._id, "like")
                         }
-                        className="flex items-center gap-1 text-sm text-gray-600 hover:text-black"
+                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                       >
                         <ThumbsUp className="w-4 h-4" />
                         {comment.likes}
@@ -362,7 +365,7 @@ const Comments = ({ videoId }: any) => {
                         onClick={() =>
                           handleReaction(comment._id, "dislike")
                         }
-                        className="flex items-center gap-1 text-sm text-gray-600 hover:text-black"
+                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                       >
                         <ThumbsDown className="w-4 h-4" />
                         {comment.dislikes}
@@ -376,7 +379,15 @@ const Comments = ({ videoId }: any) => {
                             [comment._id]: e.target.value,
                           }))
                         }
-                        className="border rounded-md px-2 py-1 text-sm w-28 bg-white"
+                        className="
+border border-border
+rounded-md
+px-2 py-1
+text-sm
+w-28
+bg-background
+text-foreground
+"
                       >
                         {languages.map((lang) => (
                           <option
@@ -401,7 +412,7 @@ const Comments = ({ videoId }: any) => {
                       </button>
                     </div>
                     {comment.userid === user?._id && (
-                      <div className="flex gap-2 mt-2 text-sm text-gray-500">
+                      <div className="flex gap-2 mt-2 text-sm text-muted-foreground">
                         <button onClick={() => handleEdit(comment)}>
                           Edit
                         </button>

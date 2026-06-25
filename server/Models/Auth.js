@@ -6,6 +6,24 @@ const userschema = mongoose.Schema({
   channelname: { type: String },
   description: { type: String },
   image: { type: String },
+  phone: {
+    type: String,
+    default: "",
+  },
+
+  state: {
+    type: String,
+    default: "",
+  },
+
+  otp: {
+    type: String,
+    default: "",
+  },
+
+  otpExpires: {
+    type: Date,
+  },
 
   isPremium: {
     type: Boolean,
@@ -32,6 +50,7 @@ const userschema = mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+
 });
 
 export default mongoose.model("user", userschema);

@@ -58,7 +58,7 @@ export default function LikedVideosContent() {
         <h2 className="text-xl font-semibold mb-2">
           Keep track of videos you like
         </h2>
-        <p className="text-gray-600">Sign in to see your liked videos.</p>
+        <p className="text-muted-foreground">Sign in to see your liked videos.</p>
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default function LikedVideosContent() {
       <div className="text-center py-12">
         <ThumbsUp className="w-16 h-16 mx-auto text-gray-400 mb-4" />
         <h2 className="text-xl font-semibold mb-2">No liked videos yet</h2>
-        <p className="text-gray-600">Videos you like will appear here.</p>
+        <p className="text-muted-foreground">Videos you like will appear here.</p>
       </div>
     );
   }
@@ -80,8 +80,16 @@ export default function LikedVideosContent() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-600">{likedVideos.filter((item) => item?.videoid).length} videos</p>
-        <Button className="flex items-center gap-2">
+        <p className="text-sm text-muted-foreground">{likedVideos.filter((item) => item?.videoid).length} videos</p>
+        <Button
+          variant="secondary"
+          className="
+flex items-center gap-2
+bg-muted
+text-foreground
+hover:bg-accent
+"
+        >
           <Play className="w-4 h-4" />
           Play all
         </Button>
@@ -93,10 +101,10 @@ export default function LikedVideosContent() {
             <Link
               href={`/watch/${item?.videoid?._id}`}
               className="flex-shrink-0"
-            >              <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden">
+            >              <div className="relative w-40 aspect-video bg-card rounded overflow-hidden">
                 <video
-                  src={`${process.env.BACKEND_URL}/${item.videoid?.filepath}`}
-                  className="object-cover group-hover:scale-105 transition-transform duration-200"
+                  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.videoid?.filepath}`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 />
               </div>
             </Link>
@@ -107,10 +115,10 @@ export default function LikedVideosContent() {
                   {item?.videoid?.videotitle}
                 </h3>
               </Link>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {item?.videoid?.videochanel}
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {item?.videoid?.views?.toLocaleString?.() || 0} views •{" "}
                 {item?.videoid?.createdAt
                   ? `${formatDistanceToNow(
@@ -118,7 +126,7 @@ export default function LikedVideosContent() {
                   )} ago`
                   : "Recently uploaded"}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Liked {formatDistanceToNow(new Date(item.createdAt))} ago
               </p>
             </div>

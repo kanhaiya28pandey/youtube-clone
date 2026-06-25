@@ -61,7 +61,7 @@ export default function HistoryContent() {
         <h2 className="text-xl font-semibold mb-2">
           Keep track of what you watch
         </h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Watch history isn't viewable when signed out.
         </p>
       </div>
@@ -73,7 +73,7 @@ export default function HistoryContent() {
       <div className="text-center py-12">
         <Clock className="w-16 h-16 mx-auto text-gray-400 mb-4" />
         <h2 className="text-xl font-semibold mb-2">No watch history yet</h2>
-        <p className="text-gray-600">Videos you watch will appear here.</p>
+        <p className="text-muted-foreground">Videos you watch will appear here.</p>
       </div>
     );
   }
@@ -81,7 +81,7 @@ export default function HistoryContent() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-600">{history.filter((item) => item?.videoid).length} videos</p>
+        <p className="text-sm text-muted-foreground">{history.filter((item) => item?.videoid).length} videos</p>
       </div>
 
       <div className="space-y-4">
@@ -92,10 +92,10 @@ export default function HistoryContent() {
               <Link
                 href={`/watch/${item?.videoid?._id}`}
                 className="flex-shrink-0">
-                <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden">
+                <div className="relative w-40 aspect-video bg-card rounded overflow-hidden">
                   <video
-                    src={`${process.env.BACKEND_URL}/${item.videoid?.filepath}`}
-                    className="object-cover group-hover:scale-105 transition-transform duration-200"
+                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.videoid?.filepath}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                 </div>
               </Link>
@@ -106,10 +106,10 @@ export default function HistoryContent() {
                     {item?.videoid?.videotitle}
                   </h3>
                 </Link>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {item?.videoid?.videochanel}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {item?.videoid?.views?.toLocaleString?.() || 0} views •{" "}
                   {item?.videoid?.createdAt
                     ? `${formatDistanceToNow(
@@ -117,7 +117,7 @@ export default function HistoryContent() {
                     )} ago`
                     : "Recently uploaded"}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Added {formatDistanceToNow(new Date(item.createdAt))} ago
                 </p>
               </div>

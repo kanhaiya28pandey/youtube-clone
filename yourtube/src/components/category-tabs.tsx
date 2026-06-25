@@ -27,8 +27,13 @@ export default function CategoryTabs() {
       {categories.map((category) => (
         <Button
           key={category}
-          variant={activeCategory === category ? "default" : "secondary"}
-          className="whitespace-nowrap"
+          variant="secondary"
+          className={
+            activeCategory === category
+              ? "bg-foreground text-background rounded-lg hover:bg-foreground hover:text-background"
+              : "bg-muted text-foreground rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700"
+          }
+
           onClick={() => setActiveCategory(category)}
         >
           {category}

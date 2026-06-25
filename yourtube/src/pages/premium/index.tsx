@@ -104,9 +104,9 @@ export default function PremiumPage() {
   };
 
   return (
-    <main className="flex justify-center items-center w-full min-h-[calc(100vh-80px)] bg-zinc-50">
+    <main className="flex justify-center items-center w-full min-h-[calc(100vh-80px)] bg-background text-foreground">
       <div className="max-w-md w-full mx-auto">
-        <div className="bg-white rounded-3xl border shadow-lg p-6">
+        <div className="bg-card text-card-foreground rounded-3xl border border-border shadow-lg p-6">
 
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -120,7 +120,7 @@ export default function PremiumPage() {
                   Choose Your Plan
                 </h1>
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Upgrade for more watch time and premium benefits
                 </p>
               </div>
@@ -167,7 +167,7 @@ export default function PremiumPage() {
                     ₹10
                   </p>
 
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     7 Minutes Watch Time
                   </p>
                 </div>
@@ -185,7 +185,7 @@ export default function PremiumPage() {
         transition-all
         hover:shadow-md
         ${selectedPlan === "silver"
-                      ? "border-gray-500 bg-gray-50"
+                      ? "border-gray-500 bg-muted"
                       : "border-gray-200"
                     }
       `}
@@ -198,7 +198,7 @@ export default function PremiumPage() {
                     ₹50
                   </p>
 
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     10 Minutes Watch Time
                   </p>
                 </div>
@@ -234,7 +234,7 @@ export default function PremiumPage() {
                     ₹100
                   </p>
 
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Unlimited Watch Time
                   </p>
                 </div>
