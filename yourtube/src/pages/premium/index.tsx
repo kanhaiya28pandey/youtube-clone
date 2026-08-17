@@ -12,6 +12,20 @@ export default function PremiumPage() {
     useState("bronze");
 
   const handlePayment = async () => {
+    const planNames = {
+      bronze: "Bronze (₹10 - 7 Minutes Watch Time)",
+      silver: "Silver (₹50 - 10 Minutes Watch Time)",
+      gold: "Gold (₹100 - Unlimited Watch Time)"
+    };
+
+    const confirm = window.confirm(
+      `Confirm upgrade to ${planNames[selectedPlan as keyof typeof planNames]}?\n\nThis will proceed to Razorpay payment.`
+    );
+
+    if (!confirm) {
+      return;
+    }
+
     try {
       const loaded = await loadRazorpay();
 
@@ -149,25 +163,25 @@ export default function PremiumPage() {
                   className={`
         cursor-pointer
         rounded-2xl
-        border
+        border-2
         p-4
         transition-all
         hover:shadow-md
         ${selectedPlan === "bronze"
-                      ? "border-amber-500 bg-amber-50"
-                      : "border-gray-200"
+                      ? "border-blue-600 bg-blue-600 text-white"
+                      : "border-gray-300 bg-white"
                     }
       `}
                 >
-                  <h3 className="text-lg font-bold">
+                  <h3 className={`text-lg font-bold ${selectedPlan === "bronze" ? "text-white" : "text-gray-900"}`}>
                     Bronze
                   </h3>
 
-                  <p className="text-3xl font-bold mt-2">
+                  <p className={`text-3xl font-bold mt-2 ${selectedPlan === "bronze" ? "text-white" : "text-gray-900"}`}>
                     ₹10
                   </p>
 
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className={`text-sm mt-1 ${selectedPlan === "bronze" ? "text-blue-100" : "text-gray-600"}`}>
                     7 Minutes Watch Time
                   </p>
                 </div>
@@ -180,25 +194,25 @@ export default function PremiumPage() {
                   className={`
         cursor-pointer
         rounded-2xl
-        border
+        border-2
         p-4
         transition-all
         hover:shadow-md
         ${selectedPlan === "silver"
-                      ? "border-gray-500 bg-muted"
-                      : "border-gray-200"
+                      ? "border-purple-600 bg-purple-600 text-white"
+                      : "border-gray-300 bg-white"
                     }
       `}
                 >
-                  <h3 className="text-lg font-bold">
+                  <h3 className={`text-lg font-bold ${selectedPlan === "silver" ? "text-white" : "text-gray-900"}`}>
                     Silver
                   </h3>
 
-                  <p className="text-3xl font-bold mt-2">
+                  <p className={`text-3xl font-bold mt-2 ${selectedPlan === "silver" ? "text-white" : "text-gray-900"}`}>
                     ₹50
                   </p>
 
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className={`text-sm mt-1 ${selectedPlan === "silver" ? "text-purple-100" : "text-gray-600"}`}>
                     10 Minutes Watch Time
                   </p>
                 </div>
@@ -212,29 +226,29 @@ export default function PremiumPage() {
         relative
         cursor-pointer
         rounded-2xl
-        border
+        border-2
         p-4
         transition-all
         hover:shadow-md
         ${selectedPlan === "gold"
-                      ? "border-yellow-500 bg-yellow-50"
-                      : "border-gray-200"
+                      ? "border-orange-600 bg-orange-600 text-white"
+                      : "border-gray-300 bg-white"
                     }
       `}
                 >
-                  <span className="absolute top-1 right-1 text-xs bg-yellow-500 text-white px-2 py-1 rounded-full">
+                  <span className={`absolute top-1 right-1 text-xs px-2 py-1 rounded-full font-semibold ${selectedPlan === "gold" ? "bg-orange-700 text-white" : "bg-orange-500 text-white"}`}>
                     Popular
                   </span>
 
-                  <h3 className="text-lg font-bold">
+                  <h3 className={`text-lg font-bold ${selectedPlan === "gold" ? "text-white" : "text-gray-900"}`}>
                     Gold
                   </h3>
 
-                  <p className="text-3xl font-bold mt-2">
+                  <p className={`text-3xl font-bold mt-2 ${selectedPlan === "gold" ? "text-white" : "text-gray-900"}`}>
                     ₹100
                   </p>
 
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className={`text-sm mt-1 ${selectedPlan === "gold" ? "text-orange-100" : "text-gray-600"}`}>
                     Unlimited Watch Time
                   </p>
                 </div>

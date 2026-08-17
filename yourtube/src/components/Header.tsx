@@ -31,29 +31,23 @@ const Header = () => {
   //   image: "https://github.com/shadcn.png?height=32&width=32",
   // };
   const [searchQuery, setSearchQuery] = useState("");
+  const [remainingMinutes, setRemainingMinutes] =
+    useState(0);
+  
   useEffect(() => {
     if (!user) return;
 
-    setRemainingMinutes(
-      Math.max(
-        0,
-        (user.watchTimeLimit || 0) -
-        (user.watchTimeUsed || 0)
-      )
+    const remaining = Math.max(
+      0,
+      (user.watchTimeLimit || 0) -
+      (user.watchTimeUsed || 0)
     );
+    setRemainingMinutes(remaining);
   }, [user]);
-  const [remainingMinutes, setRemainingMinutes] =
-    useState(
-      user
-        ? Math.max(
-          0,
-          (user.watchTimeLimit || 0) -
-          (user.watchTimeUsed || 0)
-        )
-        : 0
-    );
+
   const [isdialogeopen, setisdialogeopen] = useState(false);
   const router = useRouter();
+
   useEffect(() => {
     const handleWatchTimeUpdate = (
       event: any
@@ -155,13 +149,16 @@ border-border
         bg-blue-100
         text-blue-700
         px-3
-        py-1
         rounded-full
         text-sm
         font-semibold
       "
                 >
-                  ⏳ {remainingMinutes.toFixed(1)}m left
+                  ⏳ {user?.plan === "gold" 
+                    ? "∞ Unlimited" 
+                    : remainingMinutes > 9999 
+                    ? "∞ Unlimited" 
+                    : Math.round(remainingMinutes) + "m left"}
                 </div>
               )}
 

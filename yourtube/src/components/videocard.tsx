@@ -9,7 +9,7 @@ export default function VideoCard({ video }: any) {
       <div className="space-y-3">
         <div className="relative aspect-video rounded-lg overflow-hidden bg-card">
           <video
-            src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${video?.filepath}`}
+            src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/download/watch/${video?._id}`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             muted
           />

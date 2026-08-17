@@ -1,19 +1,22 @@
 import download from "../Models/download.js";
-import users from "../Models/Auth.js";
+import fs from "fs";
+import path from "path";
+import video from "../Models/video.js";
 
 export const downloadVideo = async (req, res) => {
-  const { userid, videoid } = req.body;
+  const { videoid } = req.body;
+  const userid = req.userId;
 
   try {
-    const user = await users.findById(userid);
+    const user = req.user;
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(401).json({
         message: "User not found",
       });
     }
 
-    // Premium users can download unlimited
+    // Check if free user exceeded daily limit
     if (!user.isPremium) {
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
@@ -27,11 +30,12 @@ export const downloadVideo = async (req, res) => {
 
       if (downloadsToday >= 1) {
         return res.status(403).json({
-          message:
-            "Daily download limit reached. Upgrade to Premium.",
+          message: "Daily download limit reached. Upgrade to Premium.",
+          limitReached: true,
         });
       }
     }
+
     const existingDownload = await download.findOne({
       userid,
       videoid,
@@ -43,6 +47,7 @@ export const downloadVideo = async (req, res) => {
         message: "Video already downloaded",
       });
     }
+
     const newDownload = new download({
       userid,
       videoid,
@@ -62,8 +67,91 @@ export const downloadVideo = async (req, res) => {
     });
   }
 };
+
+export const streamVideoFile = async (req, res) => {
+  const { videoid } = req.params;
+  const userid = req.userId;
+
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Unauthorized: Missing credentials",
+      });
+    }
+
+    const downloadRecord = await download.findOne({
+      userid,
+      videoid,
+    });
+
+    if (!downloadRecord) {
+      return res.status(403).json({
+        message: "You haven't downloaded this video",
+      });
+    }
+
+    const videoDoc = await video.findById(videoid);
+
+    if (!videoDoc) {
+      return res.status(404).json({
+        message: "Video not found",
+      });
+    }
+
+    const filePath = path.join(videoDoc.filepath);
+    const fullPath = path.resolve(filePath);
+
+    const uploadsDir = path.resolve("uploads");
+    if (!fullPath.startsWith(uploadsDir)) {
+      return res.status(403).json({
+        message: "Access denied",
+      });
+    }
+
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({
+        message: "File not found on server",
+      });
+    }
+
+    const stat = fs.statSync(fullPath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      res.writeHead(206, {
+        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Content-Length": end - start + 1,
+        "Content-Type": "video/mp4",
+        "Content-Disposition": `attachment; filename="${videoDoc.filename}"`,
+      });
+
+      fs.createReadStream(fullPath, { start, end }).pipe(res);
+    } else {
+      res.writeHead(200, {
+        "Content-Length": fileSize,
+        "Content-Type": "video/mp4",
+        "Content-Disposition": `attachment; filename="${videoDoc.filename}"`,
+      });
+
+      fs.createReadStream(fullPath).pipe(res);
+    }
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Something went wrong",
+    });
+  }
+};
 export const getDownloads = async (req, res) => {
-  const { userid } = req.params;
+  const userid = req.userId;
 
   try {
     const downloads = await download
@@ -82,13 +170,13 @@ export const getDownloads = async (req, res) => {
 };
 export const checkDownload = async (req, res) => {
   try {
-    const { userid, videoid } = req.params;
+    const { videoid } = req.params;
+    const userid = req.userId;
 
-    const existingDownload =
-      await download.findOne({
-        userid,
-        videoid,
-      });
+    const existingDownload = await download.findOne({
+      userid,
+      videoid,
+    });
 
     return res.status(200).json({
       downloaded: !!existingDownload,
@@ -101,13 +189,10 @@ export const checkDownload = async (req, res) => {
     });
   }
 };
-export const removeDownload = async (
-  req,
-  res
-) => {
+export const removeDownload = async (req, res) => {
   try {
-    const { userid, videoid } =
-      req.params;
+    const { videoid } = req.params;
+    const userid = req.userId;
 
     await download.findOneAndDelete({
       userid,
@@ -121,8 +206,71 @@ export const removeDownload = async (
     console.log(error);
 
     res.status(500).json({
-      message:
-        "Something went wrong",
+      message: "Something went wrong",
+    });
+  }
+};
+
+export const watchVideoFile = async (req, res) => {
+  const { videoid } = req.params;
+
+  try {
+    const videoDoc = await video.findById(videoid);
+
+    if (!videoDoc) {
+      return res.status(404).json({
+        message: "Video not found",
+      });
+    }
+
+    const filePath = path.join(videoDoc.filepath);
+    const fullPath = path.resolve(filePath);
+
+    const uploadsDir = path.resolve("uploads");
+    if (!fullPath.startsWith(uploadsDir)) {
+      return res.status(403).json({
+        message: "Access denied",
+      });
+    }
+
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({
+        message: "File not found on server",
+      });
+    }
+
+    res.setHeader("Content-Type", "video/mp4");
+    res.setHeader("Accept-Ranges", "bytes");
+
+    const stat = fs.statSync(fullPath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      res.writeHead(206, {
+        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Content-Length": end - start + 1,
+        "Content-Type": "video/mp4",
+      });
+
+      fs.createReadStream(fullPath, { start, end }).pipe(res);
+    } else {
+      res.writeHead(200, {
+        "Content-Length": fileSize,
+        "Content-Type": "video/mp4",
+      });
+
+      fs.createReadStream(fullPath).pipe(res);
+    }
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Error streaming video",
     });
   }
 };

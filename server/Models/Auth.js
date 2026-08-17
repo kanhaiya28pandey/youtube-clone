@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
 
 const userschema = mongoose.Schema({
-  email: { type: String, required: true },
-  name: { type: String },
-  channelname: { type: String },
-  description: { type: String },
-  image: { type: String },
+
+  email: {
+    type: String,
+    required: true,
+  },
+
   phone: {
     type: String,
     default: "",
@@ -24,6 +25,23 @@ const userschema = mongoose.Schema({
   otpExpires: {
     type: Date,
   },
+
+  name: {
+    type: String,
+  },
+
+  channelname: {
+    type: String,
+  },
+
+  description: {
+    type: String,
+  },
+
+  image: {
+    type: String,
+  },
+
 
   isPremium: {
     type: Boolean,

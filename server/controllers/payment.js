@@ -95,7 +95,6 @@ export const upgradePremium = async (req, res) => {
 
     console.log("Signature verified");
 
-    // let watchTimeLimit = 5;
     const updatedUser =
       await Auth.findByIdAndUpdate(
         userId,
@@ -109,7 +108,7 @@ export const upgradePremium = async (req, res) => {
               : plan === "silver"
                 ? 10
                 : plan === "gold"
-                  ? 999999
+                  ? 9999999
                   : 5,
 
           watchTimeUsed: 0,

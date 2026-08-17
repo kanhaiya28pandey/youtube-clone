@@ -24,7 +24,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
         >
           <div className="relative w-40 aspect-video bg-card rounded overflow-hidden flex-shrink-0">
             <video
-              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${video.filepath}`}
+              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/download/watch/${video._id}`}
               className="object-cover group-hover:scale-105 transition-transform duration-200"
             />
           </div>

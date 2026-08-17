@@ -18,7 +18,7 @@ const DownloadsContent = () => {
 
       try {
         const res = await axiosInstance.get(
-          `/download/${user._id}`
+          `/download`
         );
 
         setDownloads(res.data);
@@ -36,7 +36,7 @@ const DownloadsContent = () => {
   ) => {
     try {
       await axiosInstance.delete(
-        `/download/${user._id}/${videoid}`
+        `/download/${videoid}`
       );
 
       setDownloads((prev) =>
@@ -44,7 +44,6 @@ const DownloadsContent = () => {
           (item) =>
             item.videoid._id !== videoid
         )
-        
       );
       setOpenMenu(null);
     } catch (error) {
@@ -72,8 +71,13 @@ const DownloadsContent = () => {
           <div className="flex gap-4 p-3 border rounded-lg hover:bg-card cursor-pointer">
 
             <video
-              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.videoid?.filepath}`}
+              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/download/file/${item.videoid?._id}`}
               className="w-48 h-28 object-cover rounded"
+              muted
+              preload="metadata"
+              onLoadedMetadata={(e) => {
+                (e.currentTarget as HTMLVideoElement).currentTime = 0.1;
+              }}
             />
 
             <div className="flex-1">

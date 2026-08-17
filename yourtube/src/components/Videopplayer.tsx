@@ -114,7 +114,7 @@ export default function VideoPlayer({
             controls
             autoPlay={remainingTime !== 0}
             className="w-full h-full"
-            src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${video.filepath}`}
+            src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/download/watch/${video._id}`}
             onPlay={(e) => {
               if (
                 user &&
