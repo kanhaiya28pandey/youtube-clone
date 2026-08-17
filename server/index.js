@@ -14,14 +14,25 @@ import commentroutes from "./routes/comment.js";
 import downloadRoutes from "./routes/download.js";
 import paymentRoutes from "./routes/payment.js";
 import watchtimeRoutes from "./routes/watchtime.js";
+import fs from "fs";
 // require("dotenv").config();
 
 const app = express();
 import path from "path";
+
+const __dirname = path.resolve();
+// Ensure the uploads directory exists
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 app.use(cors());
 app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
-app.use("/uploads", express.static(path.join("uploads")));
+// File serving is protected and handled by the download controller's streaming endpoint
+// (Removed public static mounting for /uploads to enforce permission checks)
+// app.use("/uploads", express.static(path.join("uploads")));
+app.use("/uploads", express.static(uploadsDir));
 app.get("/", (req, res) => {
   res.send("You tube backend is working");
 });

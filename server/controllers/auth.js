@@ -2,16 +2,28 @@ import mongoose from "mongoose";
 import users from "../Models/Auth.js";
 
 export const login = async (req, res) => {
-  const { email, name, image } = req.body;
+  const { email, name, image, phone } = req.body;
 
   try {
     const existingUser = await users.findOne({ email });
 
     if (!existingUser) {
-      const newUser = await users.create({ email, name, image });
+      const newUser = await users.create({
+        email,
+        name,
+        image,
+        phone,
+      });
       return res.status(201).json({ result: newUser });
     } else {
-      return res.status(200).json({ result: existingUser });
+      if (phone && !existingUser.phone) {
+        existingUser.phone = phone;
+        await existingUser.save();
+      }
+
+      return res.status(200).json({
+        result: existingUser,
+      });
     }
   } catch (error) {
     console.error("Login error:", error);
