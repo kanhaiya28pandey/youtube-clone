@@ -9,17 +9,15 @@ const DownloadsContent = () => {
 
   const [downloads, setDownloads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [openMenu, setOpenMenu] =
-  useState<string | null>(null);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [videoUrls, setVideoUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchDownloads = async () => {
       if (!user?._id) return;
 
       try {
-        const res = await axiosInstance.get(
-          `/download`
-        );
+        const res = await axiosInstance.get(`/download`);
 
         setDownloads(res.data);
       } catch (error) {
@@ -31,19 +29,48 @@ const DownloadsContent = () => {
 
     fetchDownloads();
   }, [user]);
-  const handleRemoveDownload = async (
-    videoid: string
-  ) => {
+  useEffect(() => {
+    const loadVideoUrls = async () => {
+      if (!downloads.length) return;
+
+      const urls: Record<string, string> = {};
+
+      for (const item of downloads) {
+        const videoId = item.videoid?._id;
+
+        if (!videoId) continue;
+
+        try {
+          const response = await axiosInstance.get(
+            `/download/file/${videoId}`,
+            {
+              responseType: "blob",
+            },
+          );
+
+          urls[videoId] = URL.createObjectURL(response.data);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+
+      setVideoUrls(urls);
+    };
+
+    loadVideoUrls();
+
+    return () => {
+      Object.values(videoUrls).forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+    };
+  }, [downloads]);
+  const handleRemoveDownload = async (videoid: string) => {
     try {
-      await axiosInstance.delete(
-        `/download/${videoid}`
-      );
+      await axiosInstance.delete(`/download/${videoid}`);
 
       setDownloads((prev) =>
-        prev.filter(
-          (item) =>
-            item.videoid._id !== videoid
-        )
+        prev.filter((item) => item.videoid?._id !== videoid),
       );
       setOpenMenu(null);
     } catch (error) {
@@ -59,65 +86,52 @@ const DownloadsContent = () => {
   }
 
   return (
-  <div className="space-y-4">
-    {downloads.map((item) => (
-      <div
-        key={item._id}
-        className="relative"
-      >
-        <Link
-          href={`/watch/${item.videoid?._id}`}
-        >
-          <div className="flex gap-4 p-3 border rounded-lg hover:bg-card cursor-pointer">
+    <div className="space-y-4">
+      {downloads
+        .filter((item) => item.videoid)
+        .map((item) => (
+          <div key={item._id} className="relative">
+            <Link href={`/watch/${item.videoid?._id}`}>
+              <div className="flex gap-4 p-3 border rounded-lg hover:bg-card cursor-pointer">
+                <video
+                  src={videoUrls[item.videoid?._id]}
+                  className="w-48 h-28 object-cover rounded"
+                  muted
+                  preload="metadata"
+                  onLoadedMetadata={(e) => {
+                    e.currentTarget.currentTime = 0.1;
+                  }}
+                />
 
-            <video
-              src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/download/file/${item.videoid?._id}`}
-              className="w-48 h-28 object-cover rounded"
-              muted
-              preload="metadata"
-              onLoadedMetadata={(e) => {
-                (e.currentTarget as HTMLVideoElement).currentTime = 0.1;
-              }}
-            />
+                <div className="flex-1">
+                  <h3 className="font-medium">{item.videoid?.videotitle}</h3>
 
-            <div className="flex-1">
-              <h3 className="font-medium">
-                {item.videoid?.videotitle}
-              </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {item.videoid?.videochanel}
+                  </p>
 
-              <p className="text-sm text-muted-foreground">
-                {item.videoid?.videochanel}
-              </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Downloaded on{" "}
+                    {new Date(item.downloadedAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            </Link>
 
-              <p className="text-xs text-muted-foreground mt-1">
-                Downloaded on{" "}
-                {new Date(
-                  item.downloadedAt
-                ).toLocaleDateString()}
-              </p>
-            </div>
+            {/* 3 Dot Menu */}
+            <button
+              onClick={() =>
+                setOpenMenu(openMenu === item._id ? null : item._id)
+              }
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-card"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
 
-          </div>
-        </Link>
-
-        {/* 3 Dot Menu */}
-        <button
-          onClick={() =>
-            setOpenMenu(
-              openMenu === item._id
-                ? null
-                : item._id
-            )
-          }
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-card"
-        >
-          <MoreVertical className="w-5 h-5" />
-        </button>
-
-        {/* Popup Menu */}
-        {openMenu === item._id && (
-          <div
-            className="
+            {/* Popup Menu */}
+            {openMenu === item._id && (
+              <div
+                className="
               absolute
               right-4
               top-14
@@ -128,14 +142,10 @@ const DownloadsContent = () => {
               z-50
               min-w-[220px]
             "
-          >
-            <button
-              onClick={() =>
-                handleRemoveDownload(
-                  item.videoid._id
-                )
-              }
-              className="
+              >
+                <button
+                  onClick={() => handleRemoveDownload(item.videoid._id)}
+                  className="
                 flex
                 items-center
                 gap-3
@@ -144,16 +154,16 @@ const DownloadsContent = () => {
                 py-3
                 hover:bg-card
               "
-            >
-              <Trash2 className="w-5 h-5" />
-              Delete from downloads
-            </button>
+                >
+                  <Trash2 className="w-5 h-5" />
+                  Delete from downloads
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    ))}
-  </div>
-);
+        ))}
+    </div>
+  );
 };
 
 export default DownloadsContent;

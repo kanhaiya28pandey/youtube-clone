@@ -1,5 +1,4 @@
-import { sendInvoiceMail }
-  from "../filehelper/sendInvoiceMail.js";
+import { sendInvoiceMail } from "../filehelper/sendInvoiceMail.js";
 import Razorpay from "razorpay";
 import Auth from "../Models/Auth.js";
 import dotenv from "dotenv";
@@ -12,13 +11,7 @@ const razorpay = new Razorpay({
 
 export const createOrder = async (req, res) => {
   try {
-    const {
-      userId,
-      paymentId,
-      orderId,
-      signature,
-      plan,
-    } = req.body;
+    const { userId, paymentId, orderId, signature, plan } = req.body;
 
     let amount = 0;
 
@@ -60,32 +53,17 @@ export const createOrder = async (req, res) => {
 
 export const upgradePremium = async (req, res) => {
   try {
-    const {
-      userId,
-      paymentId,
-      orderId,
-      signature,
-      plan,
-    } = req.body;
+    const { userId, paymentId, orderId, signature, plan } = req.body;
 
     console.log("BODY:", req.body);
 
     const generatedSignature = crypto
-      .createHmac(
-        "sha256",
-        process.env.RAZORPAY_KEY_SECRET
-      )
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(orderId + "|" + paymentId)
       .digest("hex");
 
-    console.log(
-      "Generated:",
-      generatedSignature
-    );
-    console.log(
-      "Received :",
-      signature
-    );
+    console.log("Generated:", generatedSignature);
+    console.log("Received :", signature);
 
     if (generatedSignature !== signature) {
       return res.status(400).json({
@@ -95,26 +73,25 @@ export const upgradePremium = async (req, res) => {
 
     console.log("Signature verified");
 
-    const updatedUser =
-      await Auth.findByIdAndUpdate(
-        userId,
-        {
-          isPremium: plan !== "free",
-          plan,
+    const updatedUser = await Auth.findByIdAndUpdate(
+      userId,
+      {
+        isPremium: plan !== "free",
+        plan,
 
-          watchTimeLimit:
-            plan === "bronze"
-              ? 7
-              : plan === "silver"
-                ? 10
-                : plan === "gold"
-                  ? 9999999
-                  : 5,
+        watchTimeLimit:
+          plan === "bronze"
+            ? 7
+            : plan === "silver"
+              ? 10
+              : plan === "gold"
+                ? null
+                : 5,
 
-          watchTimeUsed: 0,
-        },
-        { new: true }
-      );
+        watchTimeUsed: 0,
+      },
+      { new: true },
+    );
     let amount = 0;
 
     switch (plan) {
@@ -136,13 +113,10 @@ export const upgradePremium = async (req, res) => {
       updatedUser.name,
       plan.toUpperCase(),
       amount,
-      paymentId
+      paymentId,
     );
 
-    console.log(
-      "Updated User:",
-      updatedUser
-    );
+    console.log("Updated User:", updatedUser);
 
     return res.status(200).json({
       success: true,

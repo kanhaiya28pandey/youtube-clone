@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
 const userschema = mongoose.Schema({
-
   email: {
     type: String,
     required: true,
@@ -42,7 +41,6 @@ const userschema = mongoose.Schema({
     type: String,
   },
 
-
   isPremium: {
     type: Boolean,
     default: false,
@@ -57,6 +55,7 @@ const userschema = mongoose.Schema({
   watchTimeLimit: {
     type: Number,
     default: 5,
+    min: 0,
   },
 
   watchTimeUsed: {
@@ -68,7 +67,6 @@ const userschema = mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-
 });
 
 export default mongoose.model("user", userschema);
