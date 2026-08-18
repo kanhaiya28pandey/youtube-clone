@@ -223,10 +223,9 @@ export const watchVideoFile = async (req, res) => {
       });
     }
 
-    const filePath = path.join(videoDoc.filepath);
-    const fullPath = path.resolve(filePath);
-
+    const fullPath = path.resolve(videoDoc.filepath);
     const uploadsDir = path.resolve("uploads");
+
     if (!fullPath.startsWith(uploadsDir)) {
       return res.status(403).json({
         message: "Access denied",
@@ -239,35 +238,60 @@ export const watchVideoFile = async (req, res) => {
       });
     }
 
-    res.setHeader("Content-Type", "video/mp4");
-    res.setHeader("Accept-Ranges", "bytes");
-
     const stat = fs.statSync(fullPath);
     const fileSize = stat.size;
     const range = req.headers.range;
 
-    if (range) {
-      const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    res.setHeader("Content-Type", videoDoc.filetype || "video/mp4");
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("Content-Disposition", "inline");
 
-      res.writeHead(206, {
-        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-        "Content-Length": end - start + 1,
-        "Content-Type": "video/mp4",
-      });
-
-      fs.createReadStream(fullPath, { start, end }).pipe(res);
-    } else {
-      res.writeHead(200, {
-        "Content-Length": fileSize,
-        "Content-Type": "video/mp4",
-      });
+    if (!range) {
+      res.setHeader("Content-Length", fileSize);
 
       fs.createReadStream(fullPath).pipe(res);
+      return;
     }
+
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parseInt(parts[0], 10);
+
+    if (isNaN(start) || start >= fileSize) {
+      return res.status(416).set({
+        "Content-Range": `bytes */${fileSize}`,
+      }).end();
+    }
+
+    let end = parts[1]
+      ? parseInt(parts[1], 10)
+      : fileSize - 1;
+
+    if (isNaN(end) || end >= fileSize) {
+      end = fileSize - 1;
+    }
+
+    if (start > end) {
+      return res.status(416).set({
+        "Content-Range": `bytes */${fileSize}`,
+      }).end();
+    }
+
+    const chunkSize = end - start + 1;
+
+    res.writeHead(206, {
+      "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": chunkSize,
+      "Content-Type": videoDoc.filetype || "video/mp4",
+      "Content-Disposition": "inline",
+    });
+
+    fs.createReadStream(fullPath, {
+      start,
+      end,
+    }).pipe(res);
   } catch (error) {
-    console.log(error);
+    console.log("Video streaming error:", error);
 
     return res.status(500).json({
       message: "Error streaming video",
