@@ -110,48 +110,64 @@ const VideoInfo = ({ video }: any) => {
     }
   };
   const handleDownload = async () => {
-    if (!user) {
-      alert("Please login first");
-      return;
-    }
+  if (!user) {
+    alert("Please login first");
+    return;
+  }
 
-    try {
-      const res = await axiosInstance.post("/download", {
-        videoid: video._id,
+  try {
+    const res = await axiosInstance.post("/download", {
+      videoid: video._id,
+    });
+
+    if (res.data.success) {
+      setIsDownloaded(true);
+
+      const videoResponse = await axiosInstance.get(
+        `/download/file/${video._id}`,
+        {
+          responseType: "blob",
+        }
+      );
+
+      const blob = new Blob([videoResponse.data], {
+        type: video.filetype || "video/mp4",
       });
 
-      if (res.data.success) {
-        setIsDownloaded(true);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
 
-        const link = document.createElement("a");
+      link.href = url;
+      link.download = video.filename || `${video.videotitle}.mp4`;
 
-        link.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/download/file/${video._id}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-        link.download = video.videotitle;
-
-        document.body.appendChild(link);
-
-        link.click();
-
-        document.body.removeChild(link);
-      }
-    } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || "Download failed";
-      
-      if (error?.response?.status === 403 && error?.response?.data?.limitReached) {
-        const upgradePlan = confirm(
-          "You've reached your daily download limit. Upgrade to Premium for unlimited downloads. Click OK to view premium plans."
-        );
-        if (upgradePlan) {
-          window.location.href = "/premium";
-        }
-      } else {
-        alert(errorMsg);
-      }
-
-      console.log(error);
+      window.URL.revokeObjectURL(url);
     }
-  };
+  } catch (error: any) {
+    const errorMsg =
+      error?.response?.data?.message || "Download failed";
+
+    if (
+      error?.response?.status === 403 &&
+      error?.response?.data?.limitReached
+    ) {
+      const upgradePlan = confirm(
+        "You've reached your daily download limit. Upgrade to Premium for unlimited downloads. Click OK to view premium plans."
+      );
+
+      if (upgradePlan) {
+        window.location.href = "/premium";
+      }
+    } else {
+      alert(errorMsg);
+    }
+
+    console.log(error);
+  }
+};
 
   const handleDislike = async () => {
     if (!user) return;

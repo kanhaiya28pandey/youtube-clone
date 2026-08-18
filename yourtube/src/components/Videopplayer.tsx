@@ -1,9 +1,7 @@
 "use client";
 
-
 import { useEffect, useRef, useState } from "react";
 import { useUser } from "@/lib/AuthContext";
-import axiosInstance from "@/lib/axiosinstance";
 
 interface VideoPlayerProps {
   video: {
@@ -16,95 +14,113 @@ interface VideoPlayerProps {
 export default function VideoPlayer({
   video,
 }: VideoPlayerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef =
+    useRef<HTMLVideoElement>(null);
 
-  const { user } = useUser();
+  const {
+    user,
+    remainingWatchSeconds,
+    startWatching,
+    stopWatching,
+  } = useUser();
 
   const [showLimitPopup, setShowLimitPopup] =
     useState(false);
-  const [remainingTime, setRemainingTime] =
-    useState<number | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
+  /*
+   * Start global watch timer when video starts.
+   */
 
-    if (user.plan === "gold") {
-      setRemainingTime(null);
+  const handlePlay = () => {
+    if (!user) {
       return;
     }
 
-    const remaining =
-      (user.watchTimeLimit -
-        (user.watchTimeUsed || 0)) * 60;
+    /*
+     * Gold has unlimited watch time.
+     */
 
-    setRemainingTime(remaining);
+    if (user.plan === "gold") {
+      return;
+    }
 
-    const interval = setInterval(async () => {
-      const video = videoRef.current;
+    /*
+     * Don't allow playback when time is over.
+     */
 
-      // Don't count if video isn't actively playing
-      if (!video || video.paused || video.ended) {
-        return;
-      }
+    if (
+      remainingWatchSeconds !== null &&
+      remainingWatchSeconds <= 0
+    ) {
+      videoRef.current?.pause();
 
-      try {
-        console.log("Sending watchtime update");
+      setShowLimitPopup(true);
 
-        const res = await axiosInstance.post(
-          "/watchtime/update",
-          {
-            userId: user._id,
-            seconds: 30,
-          }
-        );
+      return;
+    }
 
-        console.log(
-          "Dispatching event:",
-          res.data.remaining
-        );
-
-        window.dispatchEvent(
-          new CustomEvent("watchtimeUpdated", {
-            detail: {
-              remaining: res.data.remaining,
-              used: res.data.used,
-            },
-          })
-        );
-
-        console.log("Response:", res.data);
-
-        if (res.data.limitReached) {
-          video.pause();
-
-          setRemainingTime(0);
-
-          setShowLimitPopup(true);
-
-          clearInterval(interval);
-
-          return;
-        }
-
-        setRemainingTime(
-          Math.max(0, res.data.remaining * 60)
-        );
-      } catch (error) {
-        console.log(error);
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [user]);
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-
-    const secs = Math.floor(seconds % 60);
-
-    return `${mins}:${secs
-      .toString()
-      .padStart(2, "0")}`;
+    startWatching();
   };
+
+  /*
+   * Stop global watch timer when video pauses.
+   */
+
+  const handlePause = () => {
+    stopWatching();
+  };
+
+  /*
+   * Video ended.
+   */
+
+  const handleEnded = () => {
+    stopWatching();
+  };
+
+  /*
+   * If the global watch timer reaches zero,
+   * pause the current video.
+   */
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    if (user.plan === "gold") {
+      return;
+    }
+
+    if (
+      remainingWatchSeconds !== null &&
+      remainingWatchSeconds <= 0
+    ) {
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
+
+      setShowLimitPopup(true);
+    }
+  }, [
+    remainingWatchSeconds,
+    user,
+  ]);
+
+  /*
+   * Important:
+   *
+   * When this video component disappears because
+   * the user opened another video/page, stop the
+   * global timer.
+   */
+
+  useEffect(() => {
+    return () => {
+      stopWatching();
+    };
+  }, []);
+
   return (
     <>
       <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
@@ -112,20 +128,11 @@ export default function VideoPlayer({
           <video
             ref={videoRef}
             controls
-            autoPlay={remainingTime !== 0}
             className="w-full h-full"
             src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/download/watch/${video._id}`}
-            onPlay={(e) => {
-              if (
-                user &&
-                user.plan !== "gold" &&
-                user.watchTimeUsed >= user.watchTimeLimit
-              ) {
-                e.currentTarget.pause();
-
-                setShowLimitPopup(true);
-              }
-            }}
+            onPlay={handlePlay}
+            onPause={handlePause}
+            onEnded={handleEnded}
           />
         ) : (
           <div>No video available</div>
@@ -133,18 +140,39 @@ export default function VideoPlayer({
       </div>
 
       {showLimitPopup && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-card text-foreground p-6 rounded-2xl border border-border">
-
+        <div
+          className="
+            fixed
+            inset-0
+            bg-black/60
+            flex
+            items-center
+            justify-center
+            z-50
+          "
+        >
+          <div
+            className="
+              bg-card
+              text-foreground
+              p-6
+              rounded-2xl
+              border
+              border-border
+              max-w-md
+              w-full
+              mx-4
+            "
+          >
             <h2 className="text-2xl font-bold mb-2">
               Watch Limit Reached
             </h2>
 
-            <p className="text-muted-foreground">
-              Your watch limit for the
-              ${user?.plan || "free"} plan has been reached.
-
-              Upgrade now for more watch time.
+            <p className="text-muted-foreground mb-5">
+              Your {user?.plan || "free"} plan
+              watch time has been reached.
+              Upgrade your plan to watch more
+              videos.
             </p>
 
             <a href="/premium">

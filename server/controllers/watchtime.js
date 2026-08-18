@@ -1,59 +1,112 @@
 import Auth from "../Models/Auth.js";
 
-export const updateWatchTime = async (
-    req,
-    res
-) => {
-    try {
-        console.log("HEADERS:", req.headers);
-        console.log("METHOD:", req.method);
-        console.log("BODY:", req.body);
-        const { userId, seconds } = req.body;
+const PLAN_LIMITS = {
+  free: 5,
+  bronze: 7,
+  silver: 10,
+};
 
-        const user = await Auth.findById(userId);
+export const updateWatchTime = async (req, res) => {
+  try {
+    const { userId, seconds } = req.body;
 
-        if (!user) {
-            return res.status(404).json({
-                message: "User not found",
-            });
-        }
-
-        if (user.plan === "gold") {
-            return res.status(200).json({
-                remaining: "unlimited",
-            });
-        }
-
-        const newUsed =
-            Math.min(
-                user.watchTimeLimit,
-                user.watchTimeUsed + seconds / 60
-            );
-
-        user.watchTimeUsed = newUsed;
-
-        await user.save();
-
-        const remaining =
-            user.watchTimeLimit - newUsed;
-
-        if (remaining <= 0) {
-            return res.status(200).json({
-                limitReached: true,
-                remaining: 0,
-                used: newUsed,
-            });
-        }
-
-        return res.status(200).json({
-            remaining,
-            used: newUsed,
-        });
-    } catch (error) {
-        console.log(error);
-
-        return res.status(500).json({
-            message: "Server error",
-        });
+    if (!userId) {
+      return res.status(400).json({
+        message: "User ID is required",
+      });
     }
+
+    const watchSeconds = Number(seconds);
+
+    if (!watchSeconds || watchSeconds <= 0) {
+      return res.status(400).json({
+        message: "Invalid watch time",
+      });
+    }
+
+    const user = await Auth.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    /*
+     * GOLD = UNLIMITED
+     */
+
+    if (user.plan === "gold") {
+      user.watchTimeLimit = null;
+
+      await user.save();
+
+      return res.status(200).json({
+        unlimited: true,
+        remaining: "unlimited",
+        used: 0,
+      });
+    }
+
+    /*
+     * Get correct limit from the user's plan.
+     */
+
+    const planLimit = PLAN_LIMITS[user.plan] || 5;
+
+    /*
+     * Keep database limit synchronized
+     * with the actual plan.
+     */
+
+    user.watchTimeLimit = planLimit;
+
+    const currentUsed = Number(user.watchTimeUsed) || 0;
+
+    /*
+     * Convert seconds into minutes.
+     */
+
+    const addedMinutes = watchSeconds / 60;
+
+    const planLimits = {
+      free: 5,
+      bronze: 7,
+      silver: 10,
+    };
+
+    const limit = planLimits[user.plan] || 5;
+
+    const newUsed = Math.min(limit, user.watchTimeUsed + seconds / 60);
+
+    user.watchTimeUsed = newUsed;
+
+    await user.save();
+
+    const remaining = Math.max(0, planLimit - newUsed);
+
+    /*
+     * User has reached the limit.
+     */
+
+    if (remaining <= 0) {
+      return res.status(200).json({
+        limitReached: true,
+        remaining: 0,
+        used: newUsed,
+      });
+    }
+
+    return res.status(200).json({
+      limitReached: false,
+      remaining,
+      used: newUsed,
+    });
+  } catch (error) {
+    console.log("WATCHTIME ERROR:", error);
+
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
 };
