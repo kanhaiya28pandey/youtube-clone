@@ -4,13 +4,15 @@ import VideoInfo from "@/components/VideoInfo";
 import Videopplayer from "@/components/Videopplayer";
 import axiosInstance from "@/lib/axiosinstance";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const index = () => {
   const router = useRouter();
+  const commentsRef = useRef<HTMLDivElement>(null);
   const { id } = router.query;
   const [videos, setvideo] = useState<any>(null);
   const [video, setvide] = useState<any>(null);
+  const [allVideos, setAllVideos] = useState<any[]>([]);
   const [loading, setloading] = useState(true);
   // const hasCountedView = useRef(false);
   useEffect(() => {
@@ -19,22 +21,17 @@ const index = () => {
 
       try {
         const res = await axiosInstance.get("/video/getall");
-
-        const currentVideo = res.data?.find(
-          (vid: any) => vid._id === id
-        );
+        setAllVideos(res.data);
+        const currentVideo = res.data?.find((vid: any) => vid._id === id);
 
         setvideo(currentVideo || null);
         setvide(res.data);
-        setvide(
-          res.data.filter((vid: any) => vid._id !== id)
-        );
+        setvide(res.data.filter((vid: any) => vid._id !== id));
       } catch (error) {
         console.log(error);
       } finally {
         setloading(false);
       }
-      
     };
 
     fetchvideo();
@@ -89,11 +86,37 @@ const index = () => {
   //     createdAt: new Date(Date.now() - 86400000).toISOString(),
   //   },
   // ];
-  
+
   if (loading) {
     return <div>Loading..</div>;
   }
 
+  const openVideo = (videoId: string) => {
+    window.open(`/watch/${videoId}`, "_blank");
+  };
+  const handleNextVideo = () => {
+    if (!id || allVideos.length === 0) {
+      return;
+    }
+
+    const currentIndex = allVideos.findIndex((item) => item._id === id);
+
+    if (currentIndex === -1) {
+      return;
+    }
+
+    const nextIndex = (currentIndex + 1) % allVideos.length;
+
+    const nextVideo = allVideos[nextIndex];
+
+    router.push(`/watch/${nextVideo._id}`);
+  };
+  const handleOpenComments = () => {
+    commentsRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
   if (!videos) {
     return <div>Video not found</div>;
   }
@@ -102,9 +125,15 @@ const index = () => {
       <div className="max-w-7xl mx-auto p-4">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 space-y-4">
-            <Videopplayer video={videos} />
+            <Videopplayer
+              video={videos}
+              onNextVideo={handleNextVideo}
+              onOpenComments={handleOpenComments}
+            />
             <VideoInfo video={videos} />
-            <Comments videoId={id} />
+            <div ref={commentsRef}>
+              <Comments videoId={id} />
+            </div>
           </div>
           <div className="space-y-4">
             <RelatedVideos videos={video} />
