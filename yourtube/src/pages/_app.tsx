@@ -62,8 +62,8 @@ export default function App({ Component, pageProps }: AppProps) {
                 }
               );
 
-            const hour =
-              new Date(indiaTime).getHours();
+            const hour = new Date(indiaTime).getHours();
+            // const hour  = 10;
 
             console.log("Hour:", hour);
 

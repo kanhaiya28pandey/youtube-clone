@@ -14,9 +14,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import Channeldialogue from "./channeldialogue";
 import { useRouter } from "next/router";
 import { useUser } from "@/lib/AuthContext";
+import OtpDialog from "./OtpDialog";
 
 const Header = () => {
-  const { user, logout, handlegooglesignin, remainingWatchSeconds } = useUser();
+  const {
+    user,
+    logout,
+    handlegooglesignin,
+    completeLogin,
+    pendingLogin,
+    remainingWatchSeconds,
+  } = useUser();
   console.log("USER:", user);
   console.log("limit:", user?.watchTimeLimit, "used:", user?.watchTimeUsed);
   // const user: any = {
@@ -41,6 +49,7 @@ const Header = () => {
       handleSearch(e as any);
     }
   };
+  const showOtpDialog = !!pendingLogin;
   return (
     <header className="flex items-center justify-between px-4 py-2 bg-background border-b border-border">
       <div className="flex items-center gap-4">
@@ -155,7 +164,13 @@ const Header = () => {
               </div>
             </div>
 
-            <Button variant="ghost" size="icon" className="text-foreground">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/call")}
+              className="rounded-full"
+              title="Video Call"
+            >
               <VideoIcon className="w-6 h-6" />
             </Button>
 
@@ -254,6 +269,17 @@ const Header = () => {
         onclose={() => setisdialogeopen(false)}
         mode="create"
       />
+      {showOtpDialog && pendingLogin && (
+        <OtpDialog
+          isOpen={showOtpDialog}
+          onClose={() => {}}
+          email={pendingLogin.email}
+          name={pendingLogin.name}
+          image={pendingLogin.image}
+          state={pendingLogin.state}
+          onSuccess={completeLogin}
+        />
+      )}
     </header>
   );
 };

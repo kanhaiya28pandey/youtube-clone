@@ -1,18 +1,28 @@
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
-import { useState, useRef } from "react";
-import { createContext } from "react";
+import { useState, useRef, createContext, useEffect, useContext } from "react";
 import { provider, auth } from "./firebase";
 import axiosInstance from "./axiosinstance";
-import { useEffect, useContext } from "react";
 
 const UserContext = createContext();
+
+const SOUTH_STATES = [
+  "Tamil Nadu",
+  "Kerala",
+  "Karnataka",
+  "Andhra Pradesh",
+  "Telangana",
+];
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [remainingWatchSeconds, setRemainingWatchSeconds] = useState(null);
 
+  // NEW: pending Google login data
+  const [pendingLogin, setPendingLogin] = useState(null);
+
   const watchIntervalRef = useRef(null);
   const pendingSecondsRef = useRef(0);
+
   const getWatchLimit = (plan) => {
     switch (plan) {
       case "bronze":
@@ -25,6 +35,7 @@ export const UserProvider = ({ children }) => {
         return 5;
     }
   };
+
   const login = (userdata) => {
     setUser(userdata);
     localStorage.setItem("user", JSON.stringify(userdata));
@@ -38,6 +49,7 @@ export const UserProvider = ({ children }) => {
       setRemainingWatchSeconds(Math.max(0, (limit - used) * 60));
     }
   };
+
   const syncWatchTime = async () => {
     if (!user || pendingSecondsRef.current <= 0) {
       return;
@@ -72,11 +84,10 @@ export const UserProvider = ({ children }) => {
       }
     } catch (error) {
       console.log("Watch time update error:", error);
-
-      // Don't lose the seconds if backend request fails
       pendingSecondsRef.current += seconds;
     }
   };
+
   const stopWatching = async () => {
     if (watchIntervalRef.current) {
       clearInterval(watchIntervalRef.current);
@@ -85,6 +96,7 @@ export const UserProvider = ({ children }) => {
 
     await syncWatchTime();
   };
+
   const startWatching = () => {
     if (!user || user.plan === "gold") {
       return;
@@ -94,7 +106,6 @@ export const UserProvider = ({ children }) => {
       return;
     }
 
-    // Already watching
     if (watchIntervalRef.current) {
       return;
     }
@@ -118,60 +129,151 @@ export const UserProvider = ({ children }) => {
         return next;
       });
 
-      // Sync with backend every 5 seconds
       if (pendingSecondsRef.current >= 5) {
         syncWatchTime();
       }
     }, 1000);
   };
+
   const logout = async () => {
     setUser(null);
+    setPendingLogin(null);
     localStorage.removeItem("user");
+
     try {
       await signOut(auth);
     } catch (error) {
       console.error("Error during sign out:", error);
     }
   };
+
+  /*
+   * Get user's state from browser location
+   */
+  const getUserState = async () => {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        resolve("");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+            );
+
+            const data = await response.json();
+
+            resolve(data?.address?.state || "");
+          } catch (error) {
+            console.log("Location error:", error);
+            resolve("");
+          }
+        },
+        () => {
+          console.log("Location permission denied");
+          resolve("");
+        },
+      );
+    });
+  };
+
+  /*
+   * Google login
+   *
+   * IMPORTANT:
+   * Don't actually log the user into our application yet.
+   * First open OTP verification.
+   */
   const handlegooglesignin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const firebaseuser = result.user;
+
+      const state = await getUserState();
+
       const payload = {
         email: firebaseuser.email,
         name: firebaseuser.displayName,
-        image: firebaseuser.photoURL || "https://github.com/shadcn.png",
+        image:
+          firebaseuser.photoURL || "https://github.com/shadcn.png",
+        state,
       };
-      const response = await axiosInstance.post("/user/login", payload);
-      login(response.data.result);
+
+      console.log("Login location state:", state);
+
+      // Store pending login until OTP is verified
+      setPendingLogin(payload);
     } catch (error) {
-      console.error(error);
+      console.error("Google sign in error:", error);
     }
   };
+
+  /*
+   * Called after OTP is successfully verified
+   */
+  const completeLogin = async () => {
+    if (!pendingLogin) {
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.post(
+        "/user/login",
+        pendingLogin,
+      );
+
+      login(response.data.result);
+
+      /*
+       * Apply theme based on login state + IST time
+       */
+      const south = SOUTH_STATES.includes(pendingLogin.state);
+
+      const indiaTime = new Date().toLocaleString("en-US", {
+        timeZone: "Asia/Kolkata",
+      });
+
+      const hour = new Date(indiaTime).getHours();
+
+      const shouldUseLightTheme =
+        south && hour >= 10 && hour < 12;
+
+      localStorage.setItem(
+        "theme",
+        shouldUseLightTheme ? "light" : "dark",
+      );
+
+      setPendingLogin(null);
+    } catch (error) {
+      console.error("Complete login error:", error);
+    }
+  };
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
 
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-    const unsubcribe = onAuthStateChanged(auth, async (firebaseuser) => {
-      if (firebaseuser) {
-        try {
-          const payload = {
-            email: firebaseuser.email,
-            name: firebaseuser.displayName,
-            image: firebaseuser.photoURL || "https://github.com/shadcn.png",
-          };
-          const response = await axiosInstance.post("/user/login", payload);
-          login(response.data.result);
-        } catch (error) {
-          console.error(error);
-          logout();
-        }
-      }
+
+    /*
+     * Firebase authentication state is intentionally NOT
+     * used to directly log into the application.
+     *
+     * OTP must be completed first.
+     */
+    const unsubscribe = onAuthStateChanged(auth, (firebaseuser) => {
+      console.log("Firebase user:", firebaseuser?.email);
     });
-    return () => unsubcribe();
+
+    return () => unsubscribe();
   }, []);
+
   useEffect(() => {
     return () => {
       if (watchIntervalRef.current) {
@@ -179,6 +281,7 @@ export const UserProvider = ({ children }) => {
       }
     };
   }, []);
+
   return (
     <UserContext.Provider
       value={{
@@ -186,6 +289,8 @@ export const UserProvider = ({ children }) => {
         login,
         logout,
         handlegooglesignin,
+        completeLogin,
+        pendingLogin,
         remainingWatchSeconds,
         startWatching,
         stopWatching,
