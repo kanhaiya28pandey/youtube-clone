@@ -46,19 +46,24 @@ export default function VideoPlayer({
 
   const handleCloseWebsite = async () => {
     try {
-      // If currently in fullscreen, exit fullscreen first
       if (document.fullscreenElement) {
         await document.exitFullscreen();
       }
 
-      // Stop video
       videoRef.current?.pause();
 
-      // Attempt to close the current browser window/tab
       window.open("", "_self");
       window.close();
+
+      setTimeout(() => {
+        if (!document.hidden) {
+          window.history.back();
+        }
+      }, 300);
     } catch (error) {
       console.log("Unable to close browser window:", error);
+
+      window.history.back();
     }
   };
   const handleGesture = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -114,11 +119,7 @@ export default function VideoPlayer({
         return;
       }
 
-      /*
-       * 1 TAP CENTER
-       * Pause / Resume
-       */
-      if (taps === 1 && gesturePosition === "center") {
+          if (taps === 1 && gesturePosition === "center") {
         if (player.paused) {
           player.play().catch(() => {});
         } else {
@@ -128,20 +129,12 @@ export default function VideoPlayer({
         return;
       }
 
-      /*
-       * 2 TAPS LEFT
-       * Go backward 10 seconds
-       */
-      if (taps === 2 && gesturePosition === "left") {
+        if (taps === 2 && gesturePosition === "left") {
         player.currentTime = Math.max(0, player.currentTime - 10);
 
         return;
       }
 
-      /*
-       * 2 TAPS RIGHT
-       * Go forward 10 seconds
-       */
       if (taps === 2 && gesturePosition === "right") {
         const newTime = Math.min(
           player.duration || player.currentTime + 10,
@@ -153,33 +146,21 @@ export default function VideoPlayer({
         return;
       }
 
-      /*
-       * 3 TAPS CENTER
-       * Next video
-       */
       if (taps === 3 && gesturePosition === "center") {
         onNextVideo();
         return;
       }
 
-      /*
-       * 3 TAPS LEFT
-       * Open comments
-       */
       if (taps === 3 && gesturePosition === "left") {
         onOpenComments();
         return;
       }
 
-      /*
-       * 3 TAPS RIGHT
-       * Try to close browser tab
-       */
       if (taps === 3 && gesturePosition === "right") {
         handleCloseWebsite();
         return;
       }
-    }, 400);
+    }, 600);
   };
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -199,24 +180,18 @@ export default function VideoPlayer({
   useEffect(() => {
     remainingWatchSecondsRef.current = remainingWatchSeconds;
   }, [remainingWatchSeconds]);
-  /*
-   * Start global watch timer when video starts.
-   */
 
   const handlePlay = async () => {
     if (!user) {
       return;
     }
 
-    // Gold has unlimited watch time
     if (user.plan === "gold") {
       return;
     }
 
-    // Get the latest watch time from backend
     const latestRemaining = await refreshWatchTime();
 
-    // Backend says limit is already finished
     if (latestRemaining !== null && latestRemaining <= 0) {
       videoRef.current?.pause();
 
@@ -225,30 +200,20 @@ export default function VideoPlayer({
       return;
     }
 
-    // Start the global timer
     startWatching();
   };
 
-  /*
-   * Stop global watch timer when video pauses.
-   */
 
   const handlePause = () => {
     stopWatching();
   };
 
-  /*
-   * Video ended.
-   */
 
   const handleEnded = () => {
     stopWatching();
   };
 
-  /*
-   * If the global watch timer reaches zero,
-   * pause the current video.
-   */
+
   useEffect(() => {
     return () => {
       if (tapTimerRef.current) {
@@ -297,13 +262,6 @@ export default function VideoPlayer({
     };
   }, [user]);
 
-  /*
-   * Important:
-   *
-   * When this video component disappears because
-   * the user opened another video/page, stop the
-   * global timer.
-   */
 
   useEffect(() => {
     return () => {

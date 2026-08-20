@@ -131,15 +131,12 @@ export default function PremiumPage() {
 
           <hr className="my-5" />
 
-          {/* Pricing */}
-          {/* Plans */}
-          <div className="mt-6">
+            <div className="mt-6">
             <h2 className="text-xl font-bold text-center mb-4">
               Choose Your Plan
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Bronze */}
               {currentPlan === "free" && (
                 <div
                   onClick={() => setSelectedPlan("bronze")}
@@ -177,7 +174,6 @@ export default function PremiumPage() {
                 </div>
               )}
 
-              {/* Silver */}
               {["free", "bronze"].includes(currentPlan) && (
                 <div
                   onClick={() => setSelectedPlan("silver")}
@@ -215,7 +211,6 @@ export default function PremiumPage() {
                 </div>
               )}
 
-              {/* Gold */}
               {["free", "bronze", "silver"].includes(currentPlan) && (
                 <div
                   onClick={() => setSelectedPlan("gold")}
@@ -262,7 +257,6 @@ export default function PremiumPage() {
             </div>
           </div>
 
-          {/* Features */}
           <div className="mt-6 space-y-3">
             <div className="flex items-center gap-3">
               <Check className="w-5 h-5 text-green-600" />
@@ -280,7 +274,6 @@ export default function PremiumPage() {
             </div>
           </div>
 
-          {/* Premium Status */}
 
           {currentPlan === "gold" ? (
             <div className="mt-6 bg-green-100 text-green-700 text-center p-3 rounded-xl font-semibold">

@@ -77,8 +77,7 @@ export default function OtpDialog({
       }
     } catch (err: any) {
       setMessage(
-        err?.response?.data?.message ||
-          "Unable to send OTP. Please try again.",
+        err?.response?.data?.message || "Unable to send OTP. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -112,8 +111,7 @@ export default function OtpDialog({
       }
     } catch (err: any) {
       setMessage(
-        err?.response?.data?.message ||
-          "Invalid OTP. Please try again.",
+        err?.response?.data?.message || "Invalid OTP. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -123,7 +121,6 @@ export default function OtpDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
       <div className="relative w-full max-w-md rounded-2xl border border-border bg-background shadow-2xl">
-
         {/* Close */}
         <button
           onClick={onClose}
@@ -134,7 +131,6 @@ export default function OtpDialog({
 
         {/* Header */}
         <div className="px-7 pt-8 text-center">
-
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
             {isSouth ? (
               <Mail className="h-7 w-7 text-primary" />
@@ -156,15 +152,9 @@ export default function OtpDialog({
 
         {/* User information */}
         <div className="mx-7 mt-6 rounded-xl border border-border bg-muted/40 p-4">
-
           <div className="flex items-center gap-3">
-
             {image ? (
-              <img
-                src={image}
-                alt={name}
-                className="h-10 w-10 rounded-full"
-              />
+              <img src={image} alt={name} className="h-10 w-10 rounded-full" />
             ) : (
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
                 {name?.[0] || "U"}
@@ -176,18 +166,13 @@ export default function OtpDialog({
                 {name || "YourTube User"}
               </p>
 
-              <p className="truncate text-xs text-muted-foreground">
-                {email}
-              </p>
+              <p className="truncate text-xs text-muted-foreground">{email}</p>
             </div>
-
           </div>
-
         </div>
 
         {/* Verification method */}
         <div className="px-7 pt-5">
-
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-green-500" />
 
@@ -197,12 +182,10 @@ export default function OtpDialog({
                 : `Mobile verification • ${state}`}
             </span>
           </div>
-
         </div>
 
         {/* Content */}
         <div className="px-7 py-6">
-
           {!isSouth && !otpSent && (
             <>
               <label className="mb-2 block text-sm font-medium">
@@ -212,7 +195,13 @@ export default function OtpDialog({
               <Input
                 placeholder="+91 XXXXX XXXXX"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+
+                  if (value.length <= 10) {
+                    setPhone(value);
+                  }
+                }}
                 className="h-11"
               />
 
@@ -248,9 +237,7 @@ export default function OtpDialog({
                 inputMode="numeric"
                 placeholder="000000"
                 value={otp}
-                onChange={(e) =>
-                  setOtp(e.target.value.replace(/\D/g, ""))
-                }
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                 className="h-12 text-center text-xl tracking-[0.5em] font-semibold"
               />
 
@@ -283,7 +270,6 @@ export default function OtpDialog({
               {message}
             </p>
           )}
-
         </div>
 
         {/* Footer */}
@@ -292,7 +278,6 @@ export default function OtpDialog({
             YourTube uses OTP verification to keep your account secure.
           </p>
         </div>
-
       </div>
     </div>
   );

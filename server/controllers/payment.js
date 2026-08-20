@@ -17,15 +17,15 @@ export const createOrder = async (req, res) => {
 
     switch (plan) {
       case "bronze":
-        amount = 1000; // ₹10
+        amount = 1000; 
         break;
 
       case "silver":
-        amount = 5000; // ₹50
+        amount = 5000; 
         break;
 
       case "gold":
-        amount = 10000; // ₹100
+        amount = 10000; 
         break;
 
       default:

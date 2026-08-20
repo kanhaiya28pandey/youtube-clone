@@ -16,12 +16,6 @@ import { useUser } from "@/lib/AuthContext";
 
 const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
   const { user, login } = useUser();
-  // const user: any = {
-  //   id: "1",
-  //   name: "John Doe",
-  //   email: "john@example.com",
-  //   image: "https://github.com/shadcn.png?height=32&width=32",
-  // };
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",

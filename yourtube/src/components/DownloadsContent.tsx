@@ -128,7 +128,6 @@ const DownloadsContent = () => {
               <MoreVertical className="w-5 h-5" />
             </button>
 
-            {/* Popup Menu */}
             {openMenu === item._id && (
               <div
                 className="

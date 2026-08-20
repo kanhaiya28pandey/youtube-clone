@@ -198,9 +198,7 @@ const Comments = ({ videoId }: any) => {
         userid: user._id,
       });
 
-      // Comment automatically deleted
-      // after 2 unique dislikes
-      if (res.data.deleted) {
+          if (res.data.deleted) {
         setComments((prev) => prev.filter((c) => c._id !== commentId));
 
         return;

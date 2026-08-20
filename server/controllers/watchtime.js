@@ -32,11 +32,7 @@ export const updateWatchTime = async (req, res) => {
       });
     }
 
-    /*
-     * GOLD = UNLIMITED
-     */
-
-    if (user.plan === "gold") {
+     if (user.plan === "gold") {
       user.watchTimeLimit = null;
 
       await user.save();
@@ -48,24 +44,11 @@ export const updateWatchTime = async (req, res) => {
       });
     }
 
-    /*
-     * Get correct limit from the user's plan.
-     */
-
     const planLimit = PLAN_LIMITS[user.plan] || 5;
-
-    /*
-     * Keep database limit synchronized
-     * with the actual plan.
-     */
 
     user.watchTimeLimit = planLimit;
 
     const currentUsed = Number(user.watchTimeUsed) || 0;
-
-    /*
-     * Convert seconds into minutes.
-     */
 
     const addedMinutes = watchSeconds / 60;
 
@@ -84,10 +67,6 @@ export const updateWatchTime = async (req, res) => {
     await user.save();
 
     const remaining = Math.max(0, planLimit - newUsed);
-
-    /*
-     * User has reached the limit.
-     */
 
     if (remaining <= 0) {
       return res.status(200).json({

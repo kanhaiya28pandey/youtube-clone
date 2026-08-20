@@ -9,12 +9,14 @@ export default async function auth(req, res, next) {
       if (authHeader.startsWith("Bearer ")) {
         userId = authHeader.split(" ")[1];
       } else {
-        userId = authHeader; // allow raw id in x-user-id
+        userId = authHeader;
       }
     }
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: Missing credentials" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Missing credentials" });
     }
 
     const user = await users.findById(userId);

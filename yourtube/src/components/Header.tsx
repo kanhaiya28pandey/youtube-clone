@@ -27,12 +27,7 @@ const Header = () => {
   } = useUser();
   console.log("USER:", user);
   console.log("limit:", user?.watchTimeLimit, "used:", user?.watchTimeUsed);
-  // const user: any = {
-  //   id: "1",
-  //   name: "John Doe",
-  //   email: "john@example.com",
-  //   image: "https://github.com/shadcn.png?height=32&width=32",
-  // };
+
   const [searchQuery, setSearchQuery] = useState("");
 
   const [isdialogeopen, setisdialogeopen] = useState(false);
@@ -110,7 +105,6 @@ const Header = () => {
         {user ? (
           <>
             <div className="hidden md:flex items-center gap-2">
-              {/* Global Watch Time */}
               {user.plan !== "gold" && (
                 <div
                   className="
@@ -134,7 +128,6 @@ const Header = () => {
                 </div>
               )}
 
-              {/* Plan */}
               <div
                 className={`
                 px-3

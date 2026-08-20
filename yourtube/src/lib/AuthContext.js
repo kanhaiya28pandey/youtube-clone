@@ -204,9 +204,6 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  /*
-   * Get user's state from browser location
-   */
   const getUserState = async () => {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
@@ -239,13 +236,6 @@ export const UserProvider = ({ children }) => {
     });
   };
 
-  /*
-   * Google login
-   *
-   * IMPORTANT:
-   * Don't actually log the user into our application yet.
-   * First open OTP verification.
-   */
   const handlegooglesignin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
@@ -262,16 +252,12 @@ export const UserProvider = ({ children }) => {
 
       console.log("Login location state:", state);
 
-      // Store pending login until OTP is verified
       setPendingLogin(payload);
     } catch (error) {
       console.error("Google sign in error:", error);
     }
   };
 
-  /*
-   * Called after OTP is successfully verified
-   */
   const completeLogin = async () => {
     if (!pendingLogin) {
       return;
@@ -282,9 +268,6 @@ export const UserProvider = ({ children }) => {
 
       login(response.data.result);
 
-      /*
-       * Apply theme based on login state + IST time
-       */
       const south = SOUTH_STATES.includes(pendingLogin.state);
 
       const indiaTime = new Date().toLocaleString("en-US", {
@@ -322,12 +305,6 @@ export const UserProvider = ({ children }) => {
       }
     }
 
-    /*
-     * Firebase authentication state is intentionally NOT
-     * used to directly log into the application.
-     *
-     * OTP must be completed first.
-     */
     const unsubscribe = onAuthStateChanged(auth, (firebaseuser) => {
       console.log("Firebase user:", firebaseuser?.email);
     });

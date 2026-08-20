@@ -1,10 +1,6 @@
 import comment from "../Models/comment.js";
 import mongoose from "mongoose";
 
-// --------------------------------------------------
-// SPECIAL CHARACTER VALIDATION
-// --------------------------------------------------
-
 const validateCommentText = (text) => {
   const trimmedText = text?.trim() || "";
 
@@ -32,10 +28,6 @@ const validateCommentText = (text) => {
     valid: true,
   };
 };
-
-// --------------------------------------------------
-// POST COMMENT
-// --------------------------------------------------
 
 export const postcomment = async (req, res) => {
   try {
@@ -73,10 +65,6 @@ export const postcomment = async (req, res) => {
   }
 };
 
-// --------------------------------------------------
-// GET ALL COMMENTS
-// --------------------------------------------------
-
 export const getallcomment = async (req, res) => {
   const { videoid } = req.params;
 
@@ -94,10 +82,6 @@ export const getallcomment = async (req, res) => {
     });
   }
 };
-
-// --------------------------------------------------
-// DELETE COMMENT
-// --------------------------------------------------
 
 export const deletecomment = async (req, res) => {
   const { id: _id } = req.params;
@@ -121,10 +105,6 @@ export const deletecomment = async (req, res) => {
   }
 };
 
-// --------------------------------------------------
-// EDIT COMMENT
-// --------------------------------------------------
-
 export const editcomment = async (req, res) => {
   const { id: _id } = req.params;
   const { commentbody } = req.body;
@@ -133,7 +113,6 @@ export const editcomment = async (req, res) => {
     return res.status(404).send("comment unavailable");
   }
 
-  // Validate edited comment too
   const validation = validateCommentText(commentbody);
 
   if (!validation.valid) {
@@ -172,17 +151,9 @@ export const editcomment = async (req, res) => {
   }
 };
 
-// --------------------------------------------------
-// LIKE / DISLIKE COMMENT
-// --------------------------------------------------
-
 export const handleCommentReaction = async (req, res) => {
   const { id } = req.params;
   const { type, userid } = req.body;
-
-  // ------------------------------------------------
-  // VALIDATION
-  // ------------------------------------------------
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({
@@ -213,12 +184,6 @@ export const handleCommentReaction = async (req, res) => {
 
     const userId = new mongoose.Types.ObjectId(userid);
 
-    // ------------------------------------------------
-    // MAKE SURE ARRAYS EXIST
-    // This also handles older comments created before
-    // likedBy/dislikedBy were added.
-    // ------------------------------------------------
-
     if (!existingComment.likedBy) {
       existingComment.likedBy = [];
     }
@@ -235,10 +200,6 @@ export const handleCommentReaction = async (req, res) => {
       (id) => id.toString() === userid
     );
 
-    // ------------------------------------------------
-    // LIKE
-    // ------------------------------------------------
-
     if (type === "like") {
       // Already liked → remove like
       if (hasLiked) {
@@ -250,7 +211,6 @@ export const handleCommentReaction = async (req, res) => {
         existingComment.likes =
           existingComment.likedBy.length;
       } else {
-        // If previously disliked, remove dislike first
         if (hasDisliked) {
           existingComment.dislikedBy =
             existingComment.dislikedBy.filter(
@@ -258,7 +218,6 @@ export const handleCommentReaction = async (req, res) => {
             );
         }
 
-        // Add like
         existingComment.likedBy.push(userId);
 
         existingComment.likes =
@@ -269,13 +228,7 @@ export const handleCommentReaction = async (req, res) => {
       }
     }
 
-    // ------------------------------------------------
-    // DISLIKE
-    // ------------------------------------------------
-
     if (type === "dislike") {
-      // Comment owner cannot contribute to the
-      // 2-dislike automatic deletion.
       if (
         existingComment.userid.toString() === userid
       ) {
@@ -285,7 +238,6 @@ export const handleCommentReaction = async (req, res) => {
         });
       }
 
-      // Already disliked → remove dislike
       if (hasDisliked) {
         existingComment.dislikedBy =
           existingComment.dislikedBy.filter(
@@ -295,7 +247,6 @@ export const handleCommentReaction = async (req, res) => {
         existingComment.dislikes =
           existingComment.dislikedBy.length;
       } else {
-        // If previously liked, remove like first
         if (hasLiked) {
           existingComment.likedBy =
             existingComment.likedBy.filter(
@@ -303,7 +254,6 @@ export const handleCommentReaction = async (req, res) => {
             );
         }
 
-        // Add unique dislike
         existingComment.dislikedBy.push(userId);
 
         existingComment.dislikes =
@@ -312,10 +262,6 @@ export const handleCommentReaction = async (req, res) => {
         existingComment.likes =
           existingComment.likedBy.length;
       }
-
-      // ------------------------------------------------
-      // AUTO DELETE AFTER 2 UNIQUE DISLIKES
-      // ------------------------------------------------
 
       if (existingComment.dislikedBy.length >= 2) {
         await comment.findByIdAndDelete(id);
@@ -327,10 +273,6 @@ export const handleCommentReaction = async (req, res) => {
         });
       }
     }
-
-    // ------------------------------------------------
-    // SAVE
-    // ------------------------------------------------
 
     await existingComment.save();
 
