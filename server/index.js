@@ -61,6 +61,11 @@ app.use("/watchtime", watchtimeRoutes);
 
 const PORT = process.env.PORT || 5000;
 const DBURL = process.env.DB_URL;
+
+console.log(
+  "DB URL loaded:",
+  DBURL ? DBURL.replace(/:\/\/([^:]+):([^@]+)@/, "://$1:****@") : "MISSING",
+);
 app.use("/download", downloadRoutes);
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
