@@ -110,3 +110,51 @@ export const updateWatchTime = async (req, res) => {
     });
   }
 };
+
+export const getWatchTime = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({
+        message: "User ID is required",
+      });
+    }
+
+    const user = await Auth.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (user.plan === "gold") {
+      return res.status(200).json({
+        unlimited: true,
+        remaining: null,
+        used: user.watchTimeUsed || 0,
+        plan: user.plan,
+      });
+    }
+
+    const planLimit = PLAN_LIMITS[user.plan] || 5;
+    const used = Number(user.watchTimeUsed) || 0;
+
+    const remaining = Math.max(0, planLimit - used);
+
+    return res.status(200).json({
+      unlimited: false,
+      remaining,
+      used,
+      plan: user.plan,
+      limitReached: remaining <= 0,
+    });
+  } catch (error) {
+    console.log("GET WATCHTIME ERROR:", error);
+
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
+};

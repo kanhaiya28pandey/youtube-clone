@@ -51,20 +51,61 @@ export const UserProvider = ({ children }) => {
   };
 
   const updateUser = (updatedUser) => {
-  setUser(updatedUser);
-  localStorage.setItem("user", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
 
-  const limit = getWatchLimit(updatedUser.plan);
+    const limit = getWatchLimit(updatedUser.plan);
 
-  if (limit === null) {
-    setRemainingWatchSeconds(null);
-  } else {
-    const used = updatedUser.watchTimeUsed || 0;
-    setRemainingWatchSeconds(
-      Math.max(0, (limit - used) * 60)
-    );
-  }
-};
+    if (limit === null) {
+      setRemainingWatchSeconds(null);
+    } else {
+      const used = updatedUser.watchTimeUsed || 0;
+      setRemainingWatchSeconds(Math.max(0, (limit - used) * 60));
+    }
+  };
+
+  const refreshWatchTime = async () => {
+    if (!user?._id) {
+      return null;
+    }
+
+    try {
+      const response = await axiosInstance.get(`/watchtime/status/${user._id}`);
+
+      const data = response.data;
+
+      if (data.unlimited) {
+        setRemainingWatchSeconds(null);
+        return null;
+      }
+
+      const remainingSeconds = Math.max(0, Number(data.remaining || 0) * 60);
+
+      setRemainingWatchSeconds(remainingSeconds);
+
+      setUser((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        const updatedUser = {
+          ...prev,
+          watchTimeUsed:
+            typeof data.used === "number" ? data.used : prev.watchTimeUsed,
+        };
+
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+
+        return updatedUser;
+      });
+
+      return remainingSeconds;
+    } catch (error) {
+      console.log("Refresh watch time error:", error);
+
+      return null;
+    }
+  };
 
   const syncWatchTime = async () => {
     if (!user || pendingSecondsRef.current <= 0) {
@@ -215,8 +256,7 @@ export const UserProvider = ({ children }) => {
       const payload = {
         email: firebaseuser.email,
         name: firebaseuser.displayName,
-        image:
-          firebaseuser.photoURL || "https://github.com/shadcn.png",
+        image: firebaseuser.photoURL || "https://github.com/shadcn.png",
         state,
       };
 
@@ -238,10 +278,7 @@ export const UserProvider = ({ children }) => {
     }
 
     try {
-      const response = await axiosInstance.post(
-        "/user/login",
-        pendingLogin,
-      );
+      const response = await axiosInstance.post("/user/login", pendingLogin);
 
       login(response.data.result);
 
@@ -256,13 +293,9 @@ export const UserProvider = ({ children }) => {
 
       const hour = new Date(indiaTime).getHours();
 
-      const shouldUseLightTheme =
-        south && hour >= 10 && hour < 12;
+      const shouldUseLightTheme = south && hour >= 10 && hour < 12;
 
-      localStorage.setItem(
-        "theme",
-        shouldUseLightTheme ? "light" : "dark",
-      );
+      localStorage.setItem("theme", shouldUseLightTheme ? "light" : "dark");
 
       setPendingLogin(null);
     } catch (error) {
@@ -274,7 +307,19 @@ export const UserProvider = ({ children }) => {
     const storedUser = localStorage.getItem("user");
 
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const storedUserData = JSON.parse(storedUser);
+
+      setUser(storedUserData);
+
+      const limit = getWatchLimit(storedUserData.plan);
+
+      if (limit === null) {
+        setRemainingWatchSeconds(null);
+      } else {
+        const used = storedUserData.watchTimeUsed || 0;
+
+        setRemainingWatchSeconds(Math.max(0, (limit - used) * 60));
+      }
     }
 
     /*
@@ -311,6 +356,7 @@ export const UserProvider = ({ children }) => {
         remainingWatchSeconds,
         startWatching,
         stopWatching,
+        refreshWatchTime,
       }}
     >
       {children}

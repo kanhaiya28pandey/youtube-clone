@@ -45,22 +45,22 @@ export default function VideoPlayer({
   };
 
   const handleCloseWebsite = async () => {
-  try {
-    // If currently in fullscreen, exit fullscreen first
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
+    try {
+      // If currently in fullscreen, exit fullscreen first
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+
+      // Stop video
+      videoRef.current?.pause();
+
+      // Attempt to close the current browser window/tab
+      window.open("", "_self");
+      window.close();
+    } catch (error) {
+      console.log("Unable to close browser window:", error);
     }
-
-    // Stop video
-    videoRef.current?.pause();
-
-    // Attempt to close the current browser window/tab
-    window.open("", "_self");
-    window.close();
-  } catch (error) {
-    console.log("Unable to close browser window:", error);
-  }
-};
+  };
   const handleGesture = (event: React.PointerEvent<HTMLDivElement>) => {
     const player = videoRef.current;
 
@@ -185,33 +185,39 @@ export default function VideoPlayer({
     event.preventDefault();
     event.stopPropagation();
   };
-  const { user, remainingWatchSeconds, startWatching, stopWatching } =
-    useUser();
+  const {
+    user,
+    remainingWatchSeconds,
+    startWatching,
+    stopWatching,
+    refreshWatchTime,
+  } = useUser();
 
   const [showLimitPopup, setShowLimitPopup] = useState(false);
+  const remainingWatchSecondsRef = useRef<number | null>(remainingWatchSeconds);
 
+  useEffect(() => {
+    remainingWatchSecondsRef.current = remainingWatchSeconds;
+  }, [remainingWatchSeconds]);
   /*
    * Start global watch timer when video starts.
    */
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
     if (!user) {
       return;
     }
 
-    /*
-     * Gold has unlimited watch time.
-     */
-
+    // Gold has unlimited watch time
     if (user.plan === "gold") {
       return;
     }
 
-    /*
-     * Don't allow playback when time is over.
-     */
+    // Get the latest watch time from backend
+    const latestRemaining = await refreshWatchTime();
 
-    if (remainingWatchSeconds !== null && remainingWatchSeconds <= 0) {
+    // Backend says limit is already finished
+    if (latestRemaining !== null && latestRemaining <= 0) {
       videoRef.current?.pause();
 
       setShowLimitPopup(true);
@@ -219,6 +225,7 @@ export default function VideoPlayer({
       return;
     }
 
+    // Start the global timer
     startWatching();
   };
 
@@ -266,6 +273,29 @@ export default function VideoPlayer({
       setShowLimitPopup(true);
     }
   }, [remainingWatchSeconds, user]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+
+    if (!video || !user || user.plan === "gold") {
+      return;
+    }
+
+    const handleBlockedPlayback = () => {
+      const remaining = remainingWatchSecondsRef.current;
+
+      if (remaining !== null && remaining <= 0) {
+        video.pause();
+        setShowLimitPopup(true);
+      }
+    };
+
+    video.addEventListener("play", handleBlockedPlayback);
+
+    return () => {
+      video.removeEventListener("play", handleBlockedPlayback);
+    };
+  }, [user]);
 
   /*
    * Important:
