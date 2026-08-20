@@ -1,0 +1,388 @@
+/* =========================================================
+   YourTube Responsive Layer
+   ---------------------------------------------------------
+   This file intentionally contains presentation-only changes.
+   Existing component logic, API calls, state and handlers are
+   not changed.
+   ========================================================= */
+
+html,
+body,
+#__next {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+/* Main application row */
+#__next > div > div.flex {
+  min-width: 0;
+}
+
+/* Header */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  min-height: 64px;
+  flex-wrap: nowrap;
+}
+
+header form {
+  min-width: 0;
+}
+
+header form > div {
+  min-width: 0;
+}
+
+header input {
+  min-width: 0;
+}
+
+/* Keep page content from creating horizontal overflow */
+main,
+article,
+section,
+[class*="max-w-"] {
+  min-width: 0;
+}
+
+/* Video thumbnails and cards */
+video {
+  max-width: 100%;
+}
+
+/* =========================================================
+   Tablet
+   ========================================================= */
+@media (max-width: 1023px) {
+  header {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  header form {
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+    max-width: none !important;
+  }
+
+  header > div:last-child {
+    gap: 4px !important;
+  }
+
+  /* Watch page: give the player the available width */
+  .aspect-video {
+    max-width: 100%;
+  }
+}
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: 68px;
+  }
+
+  /* Header becomes a compact mobile toolbar */
+  header {
+    min-height: 56px;
+    height: 56px;
+    padding: 6px 8px !important;
+    gap: 6px;
+  }
+
+  header > div:first-child {
+    gap: 4px !important;
+    flex-shrink: 0;
+  }
+
+  header > div:first-child button {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Keep the logo icon, reduce text on small screens */
+  header > div:first-child a span:first-of-type {
+    display: none;
+  }
+
+  header > div:first-child a span:last-of-type {
+    display: none;
+  }
+
+  header > div:first-child a {
+    gap: 0 !important;
+  }
+
+  header form {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    margin: 0 2px !important;
+    max-width: none !important;
+    gap: 2px !important;
+  }
+
+  header form > div {
+    width: 100%;
+  }
+
+  header form input {
+    height: 38px;
+    font-size: 14px;
+  }
+
+  header form button[type="submit"] {
+    width: 42px;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  /* Microphone is not needed in the compact toolbar */
+  header form > button {
+    display: none;
+  }
+
+  header > div:last-child {
+    flex-shrink: 0;
+    gap: 1px !important;
+  }
+
+  header > div:last-child > button {
+    width: 34px;
+    height: 34px;
+  }
+
+  /* The plan/watch-time information already has md:hidden;
+     keep the right side compact on phones. */
+  header > div:last-child [data-radix-popper-content-wrapper] {
+    max-width: calc(100vw - 16px);
+  }
+
+  /* ---------------------------------------------------------
+     Application layout
+     --------------------------------------------------------- */
+  #__next > div > div.flex {
+    display: block !important;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Mobile navigation bar.
+     The existing Sidebar remains the same component; only its
+     presentation changes on small screens. */
+  #__next aside {
+    position: fixed !important;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    width: 100% !important;
+    height: 64px;
+    min-height: 64px !important;
+    max-height: 64px;
+    padding: 4px 6px !important;
+    border-right: 0 !important;
+    border-top: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  #__next aside nav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  #__next aside nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  #__next aside nav > a,
+  #__next aside nav > div {
+    flex: 0 0 auto;
+  }
+
+  #__next aside nav a button,
+  #__next aside nav > div button {
+    width: auto !important;
+    min-width: 68px;
+    height: 54px;
+    padding: 5px 8px !important;
+    justify-content: center !important;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 10px;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  #__next aside nav a button svg,
+  #__next aside nav > div button svg {
+    width: 19px;
+    height: 19px;
+    margin-right: 0 !important;
+  }
+
+  /* User-only navigation section */
+  #__next aside nav > div.border-t {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    border-top: 0 !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  #__next aside nav > div.border-t > a,
+  #__next aside nav > div.border-t > div {
+    flex: 0 0 auto;
+  }
+
+  #__next aside nav > div.border-t > div.px-2 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* The channel dialog stays available but does not affect layout. */
+  #__next aside + * {
+    min-width: 0;
+  }
+
+  /* Main/page content */
+  #__next main {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  #__next main.flex-1,
+  #__next main[class*="flex-1"] {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Home / listing grids */
+  #__next main .grid {
+    min-width: 0;
+  }
+
+  /* Prevent long titles / URLs from overflowing */
+  #__next h1,
+  #__next h2,
+  #__next h3,
+  #__next p,
+  #__next span {
+    overflow-wrap: anywhere;
+  }
+
+  /* ---------------------------------------------------------
+     Watch page
+     --------------------------------------------------------- */
+  .max-w-7xl {
+    width: 100%;
+    max-width: 100% !important;
+  }
+
+  /* On a phone the player and related videos naturally stack;
+     reduce surrounding spacing without changing components. */
+  .max-w-7xl.mx-auto.p-4 {
+    padding: 8px !important;
+  }
+
+  /* Video info action rows can scroll instead of overflowing */
+  .max-w-7xl .flex.items-center.gap-2 {
+    min-width: 0;
+  }
+
+  /* Comments */
+  textarea,
+  input {
+    max-width: 100%;
+  }
+
+  /* ---------------------------------------------------------
+     Channel page
+     --------------------------------------------------------- */
+  .max-w-full.mx-auto {
+    width: 100%;
+  }
+
+  /* ---------------------------------------------------------
+     Premium page
+     --------------------------------------------------------- */
+  main[class*="min-h-[calc(100vh-80px)]"] {
+    padding: 12px !important;
+    align-items: flex-start !important;
+  }
+
+  main[class*="min-h-[calc(100vh-80px)]"] > div {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* ---------------------------------------------------------
+     Call pages already use responsive Tailwind classes. These
+     rules only protect them from narrow-screen overflow.
+     --------------------------------------------------------- */
+  body:has(main) .rounded-2xl,
+  body:has(main) .rounded-xl {
+    max-width: 100%;
+  }
+
+  /* Long room IDs / URLs */
+  [class*="truncate"] {
+    min-width: 0;
+  }
+
+  /* Tables / wide content */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+
+/* =========================================================
+   Very small phones (320px–374px)
+   ========================================================= */
+@media (max-width: 374px) {
+  header {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+
+  header > div:first-child button {
+    width: 32px;
+  }
+
+  header form input {
+    font-size: 13px;
+  }
+
+  header form button[type="submit"] {
+    width: 36px;
+  }
+
+  #__next aside nav a button,
+  #__next aside nav > div button {
+    min-width: 62px;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+    font-size: 9px;
+  }
+}

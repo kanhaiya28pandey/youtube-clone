@@ -27,8 +27,9 @@ const Comments = ({ videoId }: any) => {
   const [translatedComments, setTranslatedComments] = useState<{
     [key: string]: string;
   }>({});
-  const [selectedLanguages, setSelectedLanguages] =
-    useState<{ [key: string]: string }>({});
+  const [selectedLanguages, setSelectedLanguages] = useState<{
+    [key: string]: string;
+  }>({});
   const { user } = useUser();
   const [loading, setLoading] = useState(true);
   const fetchedComments = [
@@ -95,16 +96,16 @@ const Comments = ({ videoId }: any) => {
             const lon = position.coords.longitude;
 
             const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`,
             );
 
             const data = await response.json();
 
             resolve(
               data.address.city ||
-              data.address.town ||
-              data.address.state ||
-              "Unknown"
+                data.address.town ||
+                data.address.state ||
+                "Unknown",
             );
           } catch (error) {
             console.log(error);
@@ -113,7 +114,7 @@ const Comments = ({ videoId }: any) => {
         },
         () => {
           resolve("Unknown");
-        }
+        },
       );
     });
   };
@@ -137,13 +138,10 @@ const Comments = ({ videoId }: any) => {
         },
         {
           validateStatus: () => true,
-        }
+        },
       );
       if (response.status !== 200) {
-        setErrorMessage(
-          response.data?.message ||
-          "Failed to add comment"
-        );
+        setErrorMessage(response.data?.message || "Failed to add comment");
 
         setIsSubmitting(false);
 
@@ -155,10 +153,7 @@ const Comments = ({ videoId }: any) => {
     } catch (error: any) {
       console.error("Error adding comment:", error);
 
-      setErrorMessage(
-        error.response?.data?.message ||
-        "Failed to add comment"
-      );
+      setErrorMessage(error.response?.data?.message || "Failed to add comment");
     } finally {
       setIsSubmitting(false);
     }
@@ -173,13 +168,13 @@ const Comments = ({ videoId }: any) => {
     try {
       const res = await axiosInstance.post(
         `/comment/editcomment/${editingCommentId}`,
-        { commentbody: editText }
+        { commentbody: editText },
       );
       if (res.data) {
         setComments((prev) =>
           prev.map((c) =>
-            c._id === editingCommentId ? { ...c, commentbody: editText } : c
-          )
+            c._id === editingCommentId ? { ...c, commentbody: editText } : c,
+          ),
         );
         setEditingCommentId(null);
         setEditText("");
@@ -190,50 +185,52 @@ const Comments = ({ videoId }: any) => {
   };
   const handleReaction = async (
     commentId: string,
-    type: "like" | "dislike"
+    type: "like" | "dislike",
   ) => {
-    try {
-      const res = await axiosInstance.patch(
-        `/comment/reaction/${commentId}`,
-        {
-          type,
-        }
-      );
+    if (!user?._id) {
+      alert("Please login to react to a comment.");
+      return;
+    }
 
-      // comment deleted automatically
+    try {
+      const res = await axiosInstance.patch(`/comment/reaction/${commentId}`, {
+        type,
+        userid: user._id,
+      });
+
+      // Comment automatically deleted
+      // after 2 unique dislikes
       if (res.data.deleted) {
-        setComments((prev) =>
-          prev.filter((c) => c._id !== commentId)
-        );
+        setComments((prev) => prev.filter((c) => c._id !== commentId));
 
         return;
       }
 
       setComments((prev) =>
-        prev.map((c) =>
-          c._id === commentId ? res.data : c
-        )
+        prev.map((c) => (c._id === commentId ? res.data : c)),
       );
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      console.log("Reaction error:", error);
+
+      const message = error?.response?.data?.message;
+
+      if (message) {
+        alert(message);
+      }
     }
   };
 
-  const handleTranslate = async (
-    commentId: string,
-    text: string
-  ) => {
+  const handleTranslate = async (commentId: string, text: string) => {
     try {
       const response = await fetch(
-        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${selectedLanguages[commentId] || "en"
-        }&dt=t&q=${encodeURIComponent(text)}`
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${
+          selectedLanguages[commentId] || "en"
+        }&dt=t&q=${encodeURIComponent(text)}`,
       );
 
       const data = await response.json();
 
-      const translatedText = data[0]
-        .map((item: any) => item[0])
-        .join("");
+      const translatedText = data[0].map((item: any) => item[0]).join("");
 
       setTranslatedComments((prev) => ({
         ...prev,
@@ -271,9 +268,7 @@ const Comments = ({ videoId }: any) => {
               className="min-h-[80px] resize-none border-0 border-b-2 rounded-none focus-visible:ring-0"
             />
             {errorMessage && (
-              <p className="text-sm text-red-500">
-                {errorMessage}
-              </p>
+              <p className="text-sm text-red-500">{errorMessage}</p>
             )}
             <div className="flex gap-2 justify-end">
               <Button
@@ -352,9 +347,7 @@ const Comments = ({ videoId }: any) => {
                     )}
                     <div className="flex items-center gap-4 mt-2">
                       <button
-                        onClick={() =>
-                          handleReaction(comment._id, "like")
-                        }
+                        onClick={() => handleReaction(comment._id, "like")}
                         className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                       >
                         <ThumbsUp className="w-4 h-4" />
@@ -362,9 +355,7 @@ const Comments = ({ videoId }: any) => {
                       </button>
 
                       <button
-                        onClick={() =>
-                          handleReaction(comment._id, "dislike")
-                        }
+                        onClick={() => handleReaction(comment._id, "dislike")}
                         className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                       >
                         <ThumbsDown className="w-4 h-4" />
@@ -390,10 +381,7 @@ text-foreground
 "
                       >
                         {languages.map((lang) => (
-                          <option
-                            key={lang.code}
-                            value={lang.code}
-                          >
+                          <option key={lang.code} value={lang.code}>
                             {lang.label}
                           </option>
                         ))}
@@ -401,10 +389,7 @@ text-foreground
 
                       <button
                         onClick={() =>
-                          handleTranslate(
-                            comment._id,
-                            comment.commentbody
-                          )
+                          handleTranslate(comment._id, comment.commentbody)
                         }
                         className="text-sm text-blue-600 hover:underline"
                       >

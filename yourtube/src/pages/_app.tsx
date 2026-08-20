@@ -3,6 +3,7 @@ import Sidebar from "@/components/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
 // @ts-ignore: Side-effect import for global CSS without type declarations
 import "@/styles/globals.css";
+import "@/styles/responsive.css";
 import type { AppProps } from "next/app";
 import { useEffect, useState } from "react";
 import { UserProvider } from "../lib/AuthContext";

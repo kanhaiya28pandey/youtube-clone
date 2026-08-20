@@ -58,9 +58,7 @@ const VideoInfo = ({ video }: any) => {
 
     const checkDownload = async () => {
       try {
-        const res = await axiosInstance.get(
-          `/download/check/${video._id}`
-        );
+        const res = await axiosInstance.get(`/download/check/${video._id}`);
 
         if (res.data.downloaded) {
           setIsDownloaded(true);
@@ -110,64 +108,63 @@ const VideoInfo = ({ video }: any) => {
     }
   };
   const handleDownload = async () => {
-  if (!user) {
-    alert("Please login first");
-    return;
-  }
+    if (!user) {
+      alert("Please login first");
+      return;
+    }
 
-  try {
-    const res = await axiosInstance.post("/download", {
-      videoid: video._id,
-    });
-
-    if (res.data.success) {
-      setIsDownloaded(true);
-
-      const videoResponse = await axiosInstance.get(
-        `/download/file/${video._id}`,
-        {
-          responseType: "blob",
-        }
-      );
-
-      const blob = new Blob([videoResponse.data], {
-        type: video.filetype || "video/mp4",
+    try {
+      const res = await axiosInstance.post("/download", {
+        videoid: video._id,
       });
 
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      if (res.data.success) {
+        setIsDownloaded(true);
 
-      link.href = url;
-      link.download = video.filename || `${video.videotitle}.mp4`;
+        const videoResponse = await axiosInstance.get(
+          `/download/file/${video._id}`,
+          {
+            responseType: "blob",
+          },
+        );
 
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+        const blob = new Blob([videoResponse.data], {
+          type: video.filetype || "video/mp4",
+        });
 
-      window.URL.revokeObjectURL(url);
-    }
-  } catch (error: any) {
-    const errorMsg =
-      error?.response?.data?.message || "Download failed";
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
 
-    if (
-      error?.response?.status === 403 &&
-      error?.response?.data?.limitReached
-    ) {
-      const upgradePlan = confirm(
-        "You've reached your daily download limit. Upgrade to Premium for unlimited downloads. Click OK to view premium plans."
-      );
+        link.href = url;
+        link.download = video.filename || `${video.videotitle}.mp4`;
 
-      if (upgradePlan) {
-        window.location.href = "/premium";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        window.URL.revokeObjectURL(url);
       }
-    } else {
-      alert(errorMsg);
-    }
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.message || "Download failed";
 
-    console.log(error);
-  }
-};
+      if (
+        error?.response?.status === 403 &&
+        error?.response?.data?.limitReached
+      ) {
+        const upgradePlan = confirm(
+          "You've reached your daily download limit. Upgrade to Premium for unlimited downloads. Click OK to view premium plans.",
+        );
+
+        if (upgradePlan) {
+          window.location.href = "/premium";
+        }
+      } else {
+        alert(errorMsg);
+      }
+
+      console.log(error);
+    }
+  };
 
   const handleDislike = async () => {
     if (!user) return;
@@ -193,117 +190,139 @@ const VideoInfo = ({ video }: any) => {
     }
   };
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">{video.videotitle}</h1>
+    <div className="space-y-4 w-full min-w-0 overflow-hidden">
+      <h1 className="text-xl font-semibold break-words">{video.videotitle}</h1>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Avatar className="w-10 h-10">
-            <AvatarFallback>{video.videochanel[0]}</AvatarFallback>
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 w-full min-w-0">
+        {/* Channel section */}
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <Avatar className="w-10 h-10 shrink-0">
+            <AvatarFallback>{video.videochanel?.[0] || "U"}</AvatarFallback>
           </Avatar>
-          <div>
-            <h3 className="font-medium">{video.videochanel}</h3>
-            <p className="text-sm text-muted-foreground">1.2M subscribers</p>
+
+          <div className="min-w-0">
+            <h3 className="font-medium truncate">{video.videochanel}</h3>
+
+            <p className="text-sm text-muted-foreground truncate">
+              1.2M subscribers
+            </p>
           </div>
-          <Button
-            variant="default"
-            className="ml-4"
-          >
+
+          <Button variant="default" className="shrink-0 ml-1 sm:ml-2">
             Subscribe
           </Button>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center bg-card rounded-full">
+
+        {/* Action buttons */}
+        <div className="w-full xl:w-auto min-w-0">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full scrollbar-hide">
+            <div className="flex items-center bg-card rounded-full shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="bg-muted text-foreground rounded-full hover:bg-accent"
+                onClick={handleLike}
+              >
+                <ThumbsUp
+                  className={`w-5 h-5 mr-2 ${
+                    isLiked ? "fill-current text-primary" : ""
+                  }`}
+                />
+                {likes.toLocaleString()}
+              </Button>
+
+              <div className="w-px h-6 bg-border shrink-0" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="bg-muted text-foreground rounded-full hover:bg-accent"
+                onClick={handleDislike}
+              >
+                <ThumbsDown
+                  className={`w-5 h-5 mr-2 ${
+                    isDisliked ? "fill-current text-primary" : ""
+                  }`}
+                />
+                {dislikes.toLocaleString()}
+              </Button>
+            </div>
+
             <Button
               variant="ghost"
               size="sm"
-              className="bg-muted text-foreground rounded-full hover:bg-accent"
-              onClick={handleLike}
+              className={`bg-muted text-foreground rounded-full hover:bg-accent shrink-0 ${
+                isWatchLater ? "text-primary" : ""
+              }`}
+              onClick={handleWatchLater}
             >
-              <ThumbsUp
-                className={`w-5 h-5 mr-2 ${isLiked ? "fill-current text-primary" : ""
-                  }`}
-              />
-              {likes.toLocaleString()}
+              <Clock className="w-5 h-5 mr-2" />
+              {isWatchLater ? "Saved" : "Watch Later"}
             </Button>
-            <div className="w-px h-6 bg-border" />
+
             <Button
               variant="ghost"
               size="sm"
-              className="bg-muted text-foreground rounded-full hover:bg-accent"
-              onClick={handleDislike}
+              className="bg-muted text-foreground rounded-full hover:bg-accent shrink-0"
             >
-              <ThumbsDown
-                className={`w-5 h-5 mr-2 ${isDisliked ? "fill-current text-primary" : ""
-                  }`}
-              />
-              {dislikes.toLocaleString()}
+              <Share className="w-5 h-5 mr-2" />
+              Share
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isDownloaded}
+              onClick={handleDownload}
+              className="bg-muted text-foreground rounded-full hover:bg-accent shrink-0"
+            >
+              {isDownloaded ? (
+                <Check className="w-5 h-5 mr-2" />
+              ) : (
+                <Download className="w-5 h-5 mr-2" />
+              )}
+
+              {isDownloaded ? "Downloaded" : "Download"}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="bg-muted text-foreground rounded-full hover:bg-accent shrink-0"
+            >
+              <MoreHorizontal className="w-5 h-5" />
             </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`bg-muted text-foreground rounded-full hover:bg-accent ${isWatchLater ? "text-primary" : ""
-              }`}
-            onClick={handleWatchLater}
-          >
-            <Clock className="w-5 h-5 mr-2" />
-            {isWatchLater ? "Saved" : "Watch Later"}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="bg-muted text-foreground rounded-full hover:bg-accent"
-          >
-            <Share className="w-5 h-5 mr-2" />
-            Share
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={isDownloaded}
-            onClick={handleDownload}
-            className="bg-muted text-foreground rounded-full hover:bg-accent"
-          >
-            {isDownloaded ? (
-              <Check className="w-5 h-5 mr-2" />
-            ) : (
-              <Download className="w-5 h-5 mr-2" />
-            )}
-
-            {isDownloaded
-              ? "Downloaded"
-              : "Download"}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-muted text-foreground rounded-full hover:bg-accent"
-          >
-            <MoreHorizontal className="w-5 h-5" />
-          </Button>
-
         </div>
       </div>
-      <div className="bg-card rounded-lg p-4 border border-border">
-        <div className="flex gap-4 text-sm font-medium mb-2">
+
+      {/* Description */}
+      <div className="bg-card rounded-lg p-4 border border-border w-full min-w-0">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium mb-2">
           <span>{video?.views?.toLocaleString?.() || 0} views</span>
+
           <span>
             {video?.createdAt
               ? `${formatDistanceToNow(new Date(video.createdAt))} ago`
               : "Recently uploaded"}
           </span>
         </div>
-        <div className={`text-sm ${showFullDescription ? "" : "line-clamp-3"}`}>
+
+        <div
+          className={`text-sm break-words ${
+            showFullDescription ? "" : "line-clamp-3"
+          }`}
+        >
           <p>
             Sample video description. This would contain the actual video
             description from the database.
           </p>
         </div>
+
         <Button
           variant="ghost"
           size="sm"
-          className="bg-muted text-foreground rounded-full hover:bg-accent"
+          className="bg-muted text-foreground rounded-full hover:bg-accent mt-2"
           onClick={() => setShowFullDescription(!showFullDescription)}
         >
           {showFullDescription ? "Show less" : "Show more"}
