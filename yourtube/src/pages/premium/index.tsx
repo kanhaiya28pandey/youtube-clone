@@ -54,7 +54,11 @@ export default function PremiumPage() {
 
         order_id: data.id,
 
-        handler: async function (response) {
+        handler: async function (response: {
+          razorpay_payment_id: string;
+          razorpay_order_id: string;
+          razorpay_signature: string;
+        }) {
           try {
             console.log("Payment Response:", response);
 
@@ -73,7 +77,7 @@ export default function PremiumPage() {
             }
 
             alert("Premium Activated Successfully!");
-          } catch (error) {
+          } catch (error: any) {
             console.log("Upgrade Error:", error);
 
             console.log("Backend Response:", error?.response?.data);
@@ -131,7 +135,7 @@ export default function PremiumPage() {
 
           <hr className="my-5" />
 
-            <div className="mt-6">
+          <div className="mt-6">
             <h2 className="text-xl font-bold text-center mb-4">
               Choose Your Plan
             </h2>
@@ -273,7 +277,6 @@ export default function PremiumPage() {
               <span>Invoice On Upgrade</span>
             </div>
           </div>
-
 
           {currentPlan === "gold" ? (
             <div className="mt-6 bg-green-100 text-green-700 text-center p-3 rounded-xl font-semibold">
