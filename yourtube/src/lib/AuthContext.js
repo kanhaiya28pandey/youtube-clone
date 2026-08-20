@@ -50,6 +50,22 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (updatedUser) => {
+  setUser(updatedUser);
+  localStorage.setItem("user", JSON.stringify(updatedUser));
+
+  const limit = getWatchLimit(updatedUser.plan);
+
+  if (limit === null) {
+    setRemainingWatchSeconds(null);
+  } else {
+    const used = updatedUser.watchTimeUsed || 0;
+    setRemainingWatchSeconds(
+      Math.max(0, (limit - used) * 60)
+    );
+  }
+};
+
   const syncWatchTime = async () => {
     if (!user || pendingSecondsRef.current <= 0) {
       return;
@@ -287,6 +303,7 @@ export const UserProvider = ({ children }) => {
       value={{
         user,
         login,
+        updateUser,
         logout,
         handlegooglesignin,
         completeLogin,

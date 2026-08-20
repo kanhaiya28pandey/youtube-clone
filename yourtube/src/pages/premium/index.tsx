@@ -6,20 +6,19 @@ import { useUser } from "@/lib/AuthContext";
 import { useState } from "react";
 
 export default function PremiumPage() {
-  const { user } = useUser();
+  const { user, updateUser } = useUser();
   const currentPlan = user?.plan || "free";
-  const [selectedPlan, setSelectedPlan] =
-    useState("bronze");
+  const [selectedPlan, setSelectedPlan] = useState("bronze");
 
   const handlePayment = async () => {
     const planNames = {
       bronze: "Bronze (₹10 - 7 Minutes Watch Time)",
       silver: "Silver (₹50 - 10 Minutes Watch Time)",
-      gold: "Gold (₹100 - Unlimited Watch Time)"
+      gold: "Gold (₹100 - Unlimited Watch Time)",
     };
 
     const confirm = window.confirm(
-      `Confirm upgrade to ${planNames[selectedPlan as keyof typeof planNames]}?\n\nThis will proceed to Razorpay payment.`
+      `Confirm upgrade to ${planNames[selectedPlan as keyof typeof planNames]}?\n\nThis will proceed to Razorpay payment.`,
     );
 
     if (!confirm) {
@@ -34,12 +33,9 @@ export default function PremiumPage() {
         return;
       }
 
-      const { data } = await axiosInstance.post(
-        "/payment/create-order",
-        {
-          plan: selectedPlan,
-        }
-      );
+      const { data } = await axiosInstance.post("/payment/create-order", {
+        plan: selectedPlan,
+      });
 
       console.log("Frontend Razorpay Key:");
       console.log(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
@@ -62,35 +58,28 @@ export default function PremiumPage() {
           try {
             console.log("Payment Response:", response);
 
-            const res = await axiosInstance.post(
-              "/payment/upgrade",
-              {
-                userId: user?._id || user?.id,
-                paymentId: response.razorpay_payment_id,
-                orderId: response.razorpay_order_id,
-                signature: response.razorpay_signature,
-                plan: selectedPlan,
-              }
-            );
+            const res = await axiosInstance.post("/payment/upgrade", {
+              userId: user?._id || user?.id,
+              paymentId: response.razorpay_payment_id,
+              orderId: response.razorpay_order_id,
+              signature: response.razorpay_signature,
+              plan: selectedPlan,
+            });
 
             console.log("Upgrade Success:", res.data);
 
-            alert("Premium Activated Successfully!");
+            if (res.data?.user) {
+              updateUser(res.data.user);
+            }
 
-            setTimeout(() => {
-              window.location.reload();
-            }, 1500);
+            alert("Premium Activated Successfully!");
           } catch (error) {
             console.log("Upgrade Error:", error);
 
-            console.log(
-              "Backend Response:",
-              error?.response?.data
-            );
+            console.log("Backend Response:", error?.response?.data);
 
             alert(
-              error?.response?.data?.message ||
-              "Payment failed. Try again."
+              error?.response?.data?.message || "Payment failed. Try again.",
             );
           }
         },
@@ -106,9 +95,7 @@ export default function PremiumPage() {
         },
       };
 
-      const paymentObject = new (window as any).Razorpay(
-        options
-      );
+      const paymentObject = new (window as any).Razorpay(options);
 
       paymentObject.open();
     } catch (error) {
@@ -121,7 +108,6 @@ export default function PremiumPage() {
     <main className="flex justify-center items-center w-full min-h-[calc(100vh-80px)] bg-background text-foreground">
       <div className="max-w-md w-full mx-auto">
         <div className="bg-card text-card-foreground rounded-3xl border border-border shadow-lg p-6">
-
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -130,9 +116,7 @@ export default function PremiumPage() {
               </div>
 
               <div>
-                <h1 className="text-2xl font-bold">
-                  Choose Your Plan
-                </h1>
+                <h1 className="text-2xl font-bold">Choose Your Plan</h1>
 
                 <p className="text-sm text-muted-foreground">
                   Upgrade for more watch time and premium benefits
@@ -155,7 +139,6 @@ export default function PremiumPage() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
               {/* Bronze */}
               {currentPlan === "free" && (
                 <div
@@ -167,21 +150,28 @@ export default function PremiumPage() {
         p-4
         transition-all
         hover:shadow-md
-        ${selectedPlan === "bronze"
-                      ? "border-blue-600 bg-blue-600 text-white"
-                      : "border-gray-300 bg-white"
-                    }
+        ${
+          selectedPlan === "bronze"
+            ? "border-blue-600 bg-blue-600 text-white"
+            : "border-gray-300 bg-white"
+        }
       `}
                 >
-                  <h3 className={`text-lg font-bold ${selectedPlan === "bronze" ? "text-white" : "text-gray-900"}`}>
+                  <h3
+                    className={`text-lg font-bold ${selectedPlan === "bronze" ? "text-white" : "text-gray-900"}`}
+                  >
                     Bronze
                   </h3>
 
-                  <p className={`text-3xl font-bold mt-2 ${selectedPlan === "bronze" ? "text-white" : "text-gray-900"}`}>
+                  <p
+                    className={`text-3xl font-bold mt-2 ${selectedPlan === "bronze" ? "text-white" : "text-gray-900"}`}
+                  >
                     ₹10
                   </p>
 
-                  <p className={`text-sm mt-1 ${selectedPlan === "bronze" ? "text-blue-100" : "text-gray-600"}`}>
+                  <p
+                    className={`text-sm mt-1 ${selectedPlan === "bronze" ? "text-blue-100" : "text-gray-600"}`}
+                  >
                     7 Minutes Watch Time
                   </p>
                 </div>
@@ -198,21 +188,28 @@ export default function PremiumPage() {
         p-4
         transition-all
         hover:shadow-md
-        ${selectedPlan === "silver"
-                      ? "border-purple-600 bg-purple-600 text-white"
-                      : "border-gray-300 bg-white"
-                    }
+        ${
+          selectedPlan === "silver"
+            ? "border-purple-600 bg-purple-600 text-white"
+            : "border-gray-300 bg-white"
+        }
       `}
                 >
-                  <h3 className={`text-lg font-bold ${selectedPlan === "silver" ? "text-white" : "text-gray-900"}`}>
+                  <h3
+                    className={`text-lg font-bold ${selectedPlan === "silver" ? "text-white" : "text-gray-900"}`}
+                  >
                     Silver
                   </h3>
 
-                  <p className={`text-3xl font-bold mt-2 ${selectedPlan === "silver" ? "text-white" : "text-gray-900"}`}>
+                  <p
+                    className={`text-3xl font-bold mt-2 ${selectedPlan === "silver" ? "text-white" : "text-gray-900"}`}
+                  >
                     ₹50
                   </p>
 
-                  <p className={`text-sm mt-1 ${selectedPlan === "silver" ? "text-purple-100" : "text-gray-600"}`}>
+                  <p
+                    className={`text-sm mt-1 ${selectedPlan === "silver" ? "text-purple-100" : "text-gray-600"}`}
+                  >
                     10 Minutes Watch Time
                   </p>
                 </div>
@@ -230,30 +227,38 @@ export default function PremiumPage() {
         p-4
         transition-all
         hover:shadow-md
-        ${selectedPlan === "gold"
-                      ? "border-orange-600 bg-orange-600 text-white"
-                      : "border-gray-300 bg-white"
-                    }
+        ${
+          selectedPlan === "gold"
+            ? "border-orange-600 bg-orange-600 text-white"
+            : "border-gray-300 bg-white"
+        }
       `}
                 >
-                  <span className={`absolute top-1 right-1 text-xs px-2 py-1 rounded-full font-semibold ${selectedPlan === "gold" ? "bg-orange-700 text-white" : "bg-orange-500 text-white"}`}>
+                  <span
+                    className={`absolute top-1 right-1 text-xs px-2 py-1 rounded-full font-semibold ${selectedPlan === "gold" ? "bg-orange-700 text-white" : "bg-orange-500 text-white"}`}
+                  >
                     Popular
                   </span>
 
-                  <h3 className={`text-lg font-bold ${selectedPlan === "gold" ? "text-white" : "text-gray-900"}`}>
+                  <h3
+                    className={`text-lg font-bold ${selectedPlan === "gold" ? "text-white" : "text-gray-900"}`}
+                  >
                     Gold
                   </h3>
 
-                  <p className={`text-3xl font-bold mt-2 ${selectedPlan === "gold" ? "text-white" : "text-gray-900"}`}>
+                  <p
+                    className={`text-3xl font-bold mt-2 ${selectedPlan === "gold" ? "text-white" : "text-gray-900"}`}
+                  >
                     ₹100
                   </p>
 
-                  <p className={`text-sm mt-1 ${selectedPlan === "gold" ? "text-orange-100" : "text-gray-600"}`}>
+                  <p
+                    className={`text-sm mt-1 ${selectedPlan === "gold" ? "text-orange-100" : "text-gray-600"}`}
+                  >
                     Unlimited Watch Time
                   </p>
                 </div>
               )}
-
             </div>
           </div>
 
